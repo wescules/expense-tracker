@@ -115,6 +115,8 @@
     </div>
 
     <script src="functions.js"></script>
+    <script type="module" src="database.js"></script>
+
     <script>
         let currentCurrency = 'usd';
         let currentDate = new Date();
@@ -304,9 +306,23 @@
 
         async function initialize() {
             try {
-                const configResponse = await fetch('/config');
-                if (!configResponse.ok) throw new Error('Failed to fetch configuration');
-                const config = await configResponse.json();
+                const config = {
+                    "categories": [
+                        "Food",
+                        "Groceries",
+                        "Travel",
+                        "Rent",
+                        "Utilities",
+                        "Entertainment",
+                        "Healthcare",
+                        "Shopping",
+                        "Miscellaneous",
+                        "Income"
+                    ],
+                    "currency": "usd",
+                    "startDate": 1,
+                    "recurringExpenses": []
+                };
                 const categorySelect = document.getElementById('category');
                 categorySelect.innerHTML = config.categories.map(cat => 
                     `<option value="${cat}">${cat}</option>`
@@ -314,9 +330,7 @@
                 currentCurrency = config.currency;
                 startDate = config.startDate;
                 
-                const response = await fetch('/expenses');
-                if (!response.ok) throw new Error('Failed to fetch data');
-                const data = await response.json();
+                const data = await getAllExpenses();
                 allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
                 
                 allTags.clear();
@@ -374,11 +388,9 @@
         async function confirmDelete() {
             if (!expenseToDelete) return;
             try {
-                const response = await fetch(`/expense/delete?id=${expenseToDelete}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to delete expense');
+                const response = await deleteExpense(expenseToDelete);
+                if (!response) {
+                    throw new Error('Failed to delete expense from database');
                 }
                 await initialize();
                 closeDeleteModal();
@@ -412,14 +424,9 @@
                 tags: Array.from(selectedTags)
             };
             try {
-                const url = editId ? `/expense/edit?id=${editId}` : '/expense';
-                const response = await fetch(url, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
+                const response = await updateExpense(editId, formData);
                 const messageDiv = document.getElementById('formMessage');
-                if (response.ok) {
+                if (response) {
                     messageDiv.textContent = editId ? 'Expense updated successfully!' : 'Expense added successfully!';
                     messageDiv.className = 'form-message success';
                     form.reset();

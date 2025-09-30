@@ -1,0 +1,103 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  Timestamp,
+  getDocs,
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA_J8n-q23UJjm4LWTxDkupov1crnUnHgI",
+  authDomain: "expense-tracker-c1aa9.firebaseapp.com",
+  databaseURL: "https://expense-tracker-c1aa9-default-rtdb.firebaseio.com",
+  projectId: "expense-tracker-c1aa9",
+  storageBucket: "expense-tracker-c1aa9.firebasestorage.app",
+  messagingSenderId: "923674585657",
+  appId: "1:923674585657:web:1000fcebf14fea01257be8",
+  measurementId: "G-N18Y2EKR65",
+};
+
+const EXPENSES_COLLECTION = "expenses_collection";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
+
+async function getAllExpenses() {
+  try {
+    const querySnapshot = await getDocs(collection(db, EXPENSES_COLLECTION));
+    
+    let expenseList = [];
+    querySnapshot.forEach((doc) => {
+      const expense = doc.data();
+      expenseList.push({ id: doc.id, ...expense });
+    });
+    return expenseList;
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+  }
+  return []; // Return an empty array in case of error
+}
+
+async function addExpense(formData) {
+    try {
+        const docRef = await addDoc(collection(db, EXPENSES_COLLECTION), {
+            name: formData.name,
+            amount: parseFloat(formData.amount),
+            date: formData.date,
+            category: formData.category,
+            tags: formData.tags,
+            currency: formData.currency
+        });
+        console.log("Document written with ID: ", docRef.id);
+        return docRef.id;
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        throw e;
+    }
+}
+
+// Function to update an expense
+async function updateExpense(documentId, updatedFields) {
+    const expenseRef = doc(db, EXPENSES_COLLECTION, documentId); // Get a reference to the specific document
+    try {
+        await updateDoc(expenseRef, {
+            ...updatedFields, // Spread the updated fields
+            updatedAt: Timestamp.now() // Always update the 'updatedAt' timestamp
+        });
+        console.log("Document successfully updated!");
+        return true;
+    } catch (error) {
+        console.error("Error updating document: ", error);
+    }
+}
+
+// Function to delete an expense
+async function deleteExpense(documentId) {
+    const expenseRef = doc(db, EXPENSES_COLLECTION, documentId); // Get a reference to the specific document
+    try {
+        await deleteDoc(expenseRef);
+        console.log("Document successfully deleted!");
+        return true;
+    } catch (error) {
+        console.error("Error removing document: ", error);
+    }
+}
+window.getAllExpenses = getAllExpenses;
+window.addExpense = addExpense;
+window.updateExpense = updateExpense;
+window.deleteExpense = deleteExpense; 

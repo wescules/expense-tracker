@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark"><head>
+<html lang="en" data-theme="dark">
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="fa.min.css">
@@ -10,7 +12,7 @@
     <link rel="apple-touch-icon" href="pwa/icon-192.png">
     <link rel="stylesheet" href="style.css">
     <script>
-        (function() {
+        (function () {
             const theme = localStorage.getItem('theme') || 'system';
             if (theme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -19,22 +21,17 @@
             }
         })();
     </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js');
-            });
-        }
-    </script>
     <title>ExpenseOwl Dashboard</title>
     <script src="chart.min.js"></script>
 </head>
+
 <body>
     <div class="container">
         <header>
             <div class="nav-bar">
                 <a href="/">
-                    <img src="pwa/icon-192.png" alt="ExpenseOwl Logo" height="85" style="vertical-align: middle; margin-right: 20px;">
+                    <img src="pwa/icon-192.png" alt="ExpenseOwl Logo" height="85"
+                        style="vertical-align: middle; margin-right: 20px;">
                 </a>
                 <a href="/index.html" class="view-button active" data-tooltip="Dashboard">
                     <i class="fa-solid fa-chart-pie"></i>
@@ -65,12 +62,23 @@
                         <label for="name">Name</label>
                         <input type="text" id="name" value="-" required="">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="category">Category</label>
-                        <select id="category" required=""><option value="Food">Food</option><option value="Groceries">Groceries</option><option value="Travel">Travel</option><option value="Rent">Rent</option><option value="Utilities">Utilities</option><option value="Entertainment">Entertainment</option><option value="Healthcare">Healthcare</option><option value="Shopping">Shopping</option><option value="Miscellaneous">Miscellaneous</option><option value="Income">Income</option></select>
+                        <select id="category" required="">
+                            <option value="Food">Food</option>
+                            <option value="Groceries">Groceries</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Rent">Rent</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Miscellaneous">Miscellaneous</option>
+                            <option value="Income">Income</option>
+                        </select>
                     </div>
-    
+
                     <div class="form-group">
                         <label for="tags-input">Tags</label>
                         <div id="tags-input-container" class="tags-input-container">
@@ -79,12 +87,12 @@
                         </div>
                         <div id="tags-dropdown" class="tags-dropdown"></div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="amount">Amount</label>
                         <input type="number" id="amount" step="0.01" min="0.01" max="9000000000000000" required="">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="date">Date</label>
                         <input type="date" id="date" required="">
@@ -97,12 +105,12 @@
                             document.getElementById('date').value = formattedDate;
                         </script>
                     </div>
-                    
+
                     <div class="form-group form-group-checkbox">
                         <label for="reportGain">Report Gain</label>
                         <input type="checkbox" id="reportGain" class="styled-checkbox">
                     </div>
-    
+
                     <button type="submit" class="nav-button">Add Expense</button>
                 </form>
                 <div id="formMessage" class="form-message"></div>
@@ -111,80 +119,33 @@
 
         <div class="chart-container">
             <div id="noDataMessage" class="no-data" style="display: none; width: 100%;">No expenses recorded this month.</div>
-            <div class="chart-box" style="display: flex;">
-                <canvas id="categoryPieChart" width="900" height="900" style="display: block; box-sizing: border-box; height: 300px; width: 300px;"></canvas>
+            <div class="chart-box">
+                <canvas id="categoryPieChart"></canvas>
             </div>
-            <div class="legend-box" id="customLegend" style="display: flex;"><div class="legend-item">
-                    <div class="color-box" style="background-color: #FF6B6B"></div>
-                    <div class="legend-text">
-                        <span>Food (71.1%)</span>
-                        <span class="amount">$123.00</span>
-                    </div>
-                </div><div class="legend-item">
-                    <div class="color-box" style="background-color: #4ECDC4"></div>
-                    <div class="legend-text">
-                        <span>Travel (28.9%)</span>
-                        <span class="amount">$50.00</span>
-                    </div>
-                </div>
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Total:</span>
-                        <span class="amount">
-                            $173.00
-                        </span>
-                    </div>
-                </div>
+            <div class="legend-box" id="customLegend">
             </div>
         </div>
-
-        <div id="cashflow-section" class="cashflow-container" style="display: flex;">
+        
+        <div id="cashflow-section" class="cashflow-container">
             <div class="cashflow-item income">
                 <div class="cashflow-label">Income</div>
-                <div class="cashflow-value" id="cashflow-income">$0.00</div>
+                <div class="cashflow-value" id="cashflow-income"></div>
             </div>
             <div class="cashflow-item expenses">
                 <div class="cashflow-label">Expenses</div>
-                <div class="cashflow-value" id="cashflow-expenses">$173.00</div>
+                <div class="cashflow-value" id="cashflow-expenses"></div>
             </div>
             <div class="cashflow-item balance">
                 <div class="cashflow-label">Balance</div>
-                <div class="cashflow-value negative" id="cashflow-balance">-$173.00</div>
+                <div class="cashflow-value" id="cashflow-balance"></div>
             </div>
         </div>
     </div>
-
+    <script type="module" src="database.js"></script>
     <script src="functions.js"></script>
     <script>
 
-
-async function getSheetData() {
-  const response = await fetch('https://script.google.com/macros/s/AKfycbwa7tAaxGYEUnLbSiWdU8KMI9EnDcbGfvS5svgyUkCGghNBUYchDktj9BuxVYglCr94/exec', {
-    method: 'GET',
-    headers: { 'Content-Type': "text/plain;charset=utf-8", 'Access-Control-Allow-Origin': '*' }
-  });
-  const data = await response.json();
-  console.log(data); // 2D array of all sheet rows
-}
-
-getSheetData();
-
-
-const sheetId = "1hQPopQBIayD3tYwfodoHqaoZYFc2F4ezlNPWpJAfPyI";
-const apiKey = "AIzaSyAxfVbVPGJ_ukReD5CX01qj2YLZoa750OY"; 
-const range = "Sheet1"; // or "Sheet1!A:Z"
-
-async function getData() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  console.log(data.values);
-}
-
-getData();
-
-
-        let currentCurrency = 'usd';
+        let currentCurrency = 'USD';
         let startDate = 1;
         let pieChart = null;
         let currentDate = new Date();
@@ -208,16 +169,14 @@ getData();
             expenses.forEach(exp => {
                 if (exp.amount < 0 && !disabledCategories.has(exp.category)) {
                     const amount = Math.abs(exp.amount);
-                    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + amount;
-                    totalAmount += amount;
+                    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + amount; totalAmount += amount;
                 }
             });
-            return Object.entries(categoryTotals)
-                .map(([category, total]) => ({
-                    category,
-                    total,
-                    percentage: totalAmount > 0 ? (total / totalAmount) * 100 : 0
-                }))
+            return Object.entries(categoryTotals).map(([category, total]) => ({
+                category,
+                total,
+                percentage: totalAmount > 0 ? (total / totalAmount) * 100 : 0
+            }))
                 .sort((a, b) => b.total - a.total);
         }
 
@@ -229,8 +188,7 @@ getData();
 
         function calculateExpenses(expenses) {
             return expenses
-                .filter(exp => exp.amount < 0)
-                .reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
+                .filter(exp => exp.amount < 0).reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
         }
 
         function updateChartAndLegend() {
@@ -239,43 +197,27 @@ getData();
             const legendBox = document.getElementById('customLegend');
             const cashflowSection = document.getElementById('cashflow-section');
             const noDataMessage = document.getElementById('noDataMessage');
-            const hasExpenses = monthExpenses.some(e => e.amount < 0);
-            if (!hasExpenses) {
+            const hasExpenses = monthExpenses.some(e => e.amount < 0); if (!hasExpenses) {
                 if (pieChart) {
-                    pieChart.destroy();
-                    pieChart = null;
-                }
-                chartBox.style.display = 'none';
-                legendBox.style.display = 'none';
-                cashflowSection.style.display = 'none';
-                noDataMessage.style.display = 'block';
+                    pieChart.destroy(); pieChart = null;
+                } chartBox.style.display = 'none'; legendBox.style.display = 'none';
+                cashflowSection.style.display = 'none'; noDataMessage.style.display = 'block';
             } else {
-                chartBox.style.display = 'flex';
-                legendBox.style.display = 'flex';
-                cashflowSection.style.display = 'flex';
-                noDataMessage.style.display = 'none';
-                
-                const categoryData = calculateCategoryBreakdown(monthExpenses);
-                updateCashflow(monthExpenses);
-                createPieChart(categoryData);
-                updateLegend(categoryData);
+                chartBox.style.display = 'flex'; legendBox.style.display = 'flex'; cashflowSection.style.display = 'flex';
+                noDataMessage.style.display = 'none'; const categoryData = calculateCategoryBreakdown(monthExpenses);
+                updateCashflow(monthExpenses); createPieChart(categoryData); updateLegend(categoryData);
             }
-        }
-
-        function updateCashflow(expenses) {
-            const income = calculateIncome(expenses);
-            const expenseTotal = calculateExpenses(expenses);
-            const balance = income - expenseTotal;
-            
+        } function
+            updateCashflow(expenses) {
+                const income = calculateIncome(expenses); const
+                    expenseTotal = calculateExpenses(expenses); const balance = income - expenseTotal;
             document.getElementById('cashflow-income').textContent = formatCurrency(income);
             document.getElementById('cashflow-expenses').textContent = formatCurrency(expenseTotal);
-            document.getElementById('cashflow-balance').textContent = formatCurrency(balance);
-            
-            const balanceElement = document.getElementById('cashflow-balance');
-            if (balance >= 0) {
-                balanceElement.classList.add('positive');
-                balanceElement.classList.remove('negative');
-            } else {
+            document.getElementById('cashflow-balance').textContent = formatCurrency(balance); const
+                balanceElement = document.getElementById('cashflow-balance'); if (balance >= 0) {
+                    balanceElement.classList.add('positive');
+                    balanceElement.classList.remove('negative');
+                } else {
                 balanceElement.classList.add('negative');
                 balanceElement.classList.remove('positive');
             }
@@ -321,10 +263,9 @@ getData();
             legendContainer.innerHTML = '';
             const monthExpenses = getMonthExpenses(allExpenses);
             const currentMonthCategories = [...new Set(monthExpenses
-                .filter(exp => exp.amount < 0)
-                .map(exp => exp.category))];
+                .filter(exp => exp.amount < 0).map(exp => exp.category))];
             const categoryMap = new Map(categoryData.map(cat => [cat.category, cat]));
-            
+
             currentMonthCategories.sort((a, b) => {
                 const dataA = categoryMap.get(a);
                 const dataB = categoryMap.get(b);
@@ -345,25 +286,25 @@ getData();
                         <span>${category}${percentage}</span>
                         <span class="amount">${amount}</span>
                     </div>
-                `;
+                    `;
                 item.addEventListener('click', () => toggleCategory(category));
                 legendContainer.appendChild(item);
             });
 
             const activeTotalExpenses = monthExpenses
-                .filter(exp => exp.amount < 0 && !disabledCategories.has(exp.category))
-                .reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
+                .filter(exp => exp.amount < 0 && !disabledCategories.has(exp.category)).reduce((sum, exp) => sum +
+                    Math.abs(exp.amount), 0);
 
             const totalsHtml = `
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Total:</span>
-                        <span class="amount">
-                            ${formatCurrency(activeTotalExpenses)}
-                        </span>
-                    </div>
-                </div>
-            `;
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Total:</span>
+                                <span class="amount">
+                                    ${formatCurrency(activeTotalExpenses)}
+                                </span>
+                            </div>
+                        </div>
+                        `;
             legendContainer.insertAdjacentHTML('beforeend', totalsHtml);
         }
 
@@ -378,7 +319,6 @@ getData();
 
         async function initialize() {
             try {
-                <!-- const configResponse = await fetch('/config'); -->
                 const config = {
                     "categories": [
                         "Food",
@@ -395,20 +335,18 @@ getData();
                     "currency": "usd",
                     "startDate": 1,
                     "recurringExpenses": []
-                }
-                <!-- if (!configResponse.ok) throw new Error('Failed to fetch configuration'); -->
-                <!-- const config = await configResponse.json(); -->
+                };
                 const categorySelect = document.getElementById('category');
-                categorySelect.innerHTML = config.categories.map(cat => 
+                categorySelect.innerHTML = config.categories.map(cat =>
                     `<option value="${cat}">${cat}</option>`
                 ).join('');
                 currentCurrency = config.currency;
                 startDate = config.startDate;
-                
-                const response = await fetch('/expenses');
-                if (!response.ok) throw new Error('Failed to fetch data');
-                const data = await response.json();
-                allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
+
+                const data = await getAllExpenses();
+                if (!data) throw new Error('Failed to fetch expenses');
+                allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses
+                    : []);
 
                 allTags.clear();
                 allExpenses.forEach(exp => {
@@ -416,7 +354,7 @@ getData();
                         exp.tags.forEach(tag => allTags.add(tag));
                     }
                 });
-                
+
                 const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
                 assignCategoryColors(uniqueCategories);
                 updateMonthDisplay();
@@ -476,8 +414,9 @@ getData();
             input.addEventListener('input', () => {
                 const value = input.value.trim().toLowerCase();
                 dropdown.innerHTML = '';
-                const filteredTags = [...allTags].filter(tag => tag.toLowerCase().includes(value) && !selectedTags.has(tag));
-                
+                const filteredTags = [...allTags].filter(tag => tag.toLowerCase().includes(value) &&
+                    !selectedTags.has(tag));
+
                 if (value && ![...allTags].map(t => t.toLowerCase()).includes(value)) {
                     const newItem = document.createElement('div');
                     newItem.textContent = `+ Create "${input.value.trim()}"`;
@@ -492,7 +431,7 @@ getData();
                     item.onclick = () => addTag(tag);
                     dropdown.appendChild(item);
                 });
-                
+
                 dropdown.style.display = dropdown.children.length > 0 ? 'block' : 'none';
             });
 
@@ -525,7 +464,7 @@ getData();
             updateChartAndLegend();
         });
 
-        document.getElementById('toggleExpenseFormBtn').addEventListener('click', function() {
+        document.getElementById('toggleExpenseFormBtn').addEventListener('click', function () {
             const formContainer = document.getElementById('addExpenseContainer');
             const isHidden = formContainer.style.display === 'none' || formContainer.style.display === '';
 
@@ -550,16 +489,14 @@ getData();
                 category: document.getElementById('category').value,
                 amount: amount,
                 date: getISODateWithLocalTime(document.getElementById('date').value),
-                tags: Array.from(selectedTags)
+                tags: Array.from(selectedTags),
+                currency: currentCurrency
             };
+            console.log('Form Data to submit:', formData);
             try {
-                const response = await fetch('/expense', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
+                const response = await addExpense(formData);
                 const messageDiv = document.getElementById('formMessage');
-                if (response.ok) {
+                if (response) {
                     messageDiv.textContent = 'Expense added successfully!';
                     messageDiv.className = 'form-message success';
                     document.getElementById('expenseForm').reset();
@@ -597,4 +534,6 @@ getData();
     </script>
 
 
-</body></html>
+</body>
+
+</html>
