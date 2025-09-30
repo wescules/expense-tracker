@@ -80,6 +80,7 @@
             <div class="legend-box" id="customLegend">
             </div>
         </div>
+        <canvas id="expenseChart" width="600" height="400"></canvas>
         <div id="tableContainer">
         </div>
     </div>
@@ -158,9 +159,11 @@
     <script type="module" src="database.js"></script>
     <script src="functions.js"></script>
     <script>
+
         let currentCurrency = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo
         let startDate = 1;
         let pieChart = null;
+        let lineChart = null;
         let currentDate = new Date();
         let allExpenses = [];
         let disabledCategories = new Set();
@@ -180,7 +183,7 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>Name</th>
+                            <th>Expense</th>
                             <th>Date</th>
                             ${hasTags ? '<th class="tags-column">Tags</th>' : ''}
                             <th>Amount</th>
@@ -445,10 +448,90 @@
                 updateChartAndLegend();
                 updateTable();
                 setupTagInput();
+                drawExpenseChart();
             } catch (error) {
                 console.error('Failed to initialize dashboard:', error);
             }
         }
+
+        function drawExpenseChart() {
+            if (lineChart) lineChart.destroy();
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if (!allExpenses || allExpenses.length === 0) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                return;
+            }
+            const year1 = currentDate.getFullYear();
+            const month1 = currentDate.getMonth();
+            const allDays = getDaysInMonth(year1, month1);
+
+            // Step 2: Aggregate expenses per day
+            const expensesByDay = {};
+            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
+            allExpenses.forEach(exp => {
+                const day = exp.date.split('T')[0];
+                const amount = convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo);
+                expensesByDay[day] = (expensesByDay[day] || 0) + amount;
+            });
+
+            if (Object.keys(expensesByDay).length === 0) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                return;
+            }
+
+            // Step 3: Prepare dataset with zeros for missing days
+            const data = allDays.map(day => expensesByDay[day] || 0);
+
+            // Step 4: Chart.js
+            lineChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: allDays,
+                    datasets: [{
+                        label: 'Daily Expenses',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { type: 'time',
+                        time: {
+                            unit: 'day',                 // your data is daily
+                            tooltipFormat: 'MMM d',      // tooltip shows e.g., Oct 1
+                            displayFormats: {
+                                day: 'MMM d'             // x-axis label shows e.g., Oct 1
+                            }
+                        },
+                                    grid: {
+                drawOnChartArea: false,  // hides vertical grid lines
+                drawTicks: true           // optional, keeps tick marks
+            },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        } }, // show all dates
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+        // Step 1: Generate all dates of the month
+        function getDaysInMonth(year, month) {
+            const dates = [];
+            const date = new Date(year, month, 1);
+            while (date.getMonth() === month) {
+                // Format as YYYY-MM-DD using local time
+                const day = date.getDate().toString().padStart(2, '0');
+                const monthStr = (date.getMonth() + 1).toString().padStart(2, '0');
+                dates.push(`${date.getFullYear()}-${monthStr}-${day}`);
+                date.setDate(date.getDate() + 1);
+            }
+            return dates;
+
+        }
+        
+
 
         Chart.defaults.color = '#b3b3b3';
         Chart.defaults.borderColor = '#606060';
@@ -542,6 +625,7 @@
             updateMonthDisplay();
             updateTable();
             updateChartAndLegend();
+            drawExpenseChart();
         });
 
         document.getElementById('nextMonth').addEventListener('click', () => {
@@ -549,6 +633,7 @@
             updateMonthDisplay();
             updateTable();
             updateChartAndLegend();
+            drawExpenseChart();
         });
 
         document.getElementById('toggleExpenseFormBtn').addEventListener('click', function () {
@@ -617,6 +702,9 @@
         });
     </script>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
 
 </body>
 
