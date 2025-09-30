@@ -164,7 +164,7 @@
                                     <div>${escapeHTML(expense.name)}</div>
                                     <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
                                 </td>
-                                <td >${formatDateFromUTC(expense.date).slice(0, 6)}</td>
+                                <td >${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td>
                                 ${hasTags ? `<td class="tags-column">${(expense.tags || []).map(escapeHTML).join(', ')}</td>` : ''}
                                 <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
                                 
