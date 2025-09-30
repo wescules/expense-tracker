@@ -41,8 +41,41 @@ const currencyBehaviors = {
 // let allExpenses = [];
 // let allTags = new Set();
 
+// Hardcoded conversion rates (relative to USD as base)
+const rates = {
+  'usd': 1,
+  'cny': 7.12,   // 1 USD = 7.12 CNY
+  'inr': 88.77   // 1 USD = 88.77 INR
+};
+
+function convertCurrency(amount, from, to) {
+  if (!rates[from] || !rates[to]) {
+    throw new Error("Unsupported currency");
+  }
+
+  // Convert to USD first, then to target
+  const amountInUSD = amount / rates[from];
+  const converted = amountInUSD * rates[to];
+  return converted;
+}
+
 function formatCurrency(amount) {
     const behavior = currencyBehaviors[currentCurrency] || { symbol: '$', useComma: false, useDecimals: true };
+    const isNegative = amount < 0;
+    const absAmount = Math.abs(amount);
+    const options = {
+        minimumFractionDigits: behavior.useDecimals ? 2 : 0,
+        maximumFractionDigits: behavior.useDecimals ? 2 : 0,
+    };
+    let formattedAmount = new Intl.NumberFormat(behavior.useComma ? 'de-DE' : 'en-US', options).format(absAmount);
+    const postfixCurrencies = new Set(['kr', 'kr.', 'Fr', 'zł']);
+    let result = postfixCurrencies.has(behavior.symbol) ? `${formattedAmount} ${behavior.symbol}` : `${behavior.symbol}${formattedAmount}`;
+    return isNegative ? `-${result}` : result;
+}
+
+function formatCurrencyInTable(amount, currency) {
+    console.log('Formatting amount:', amount, 'with currency:', currency);
+    const behavior = currencyBehaviors[currency] || { symbol: '$', useComma: false, useDecimals: true };
     const isNegative = amount < 0;
     const absAmount = Math.abs(amount);
     const options = {

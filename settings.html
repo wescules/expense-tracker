@@ -6,12 +6,15 @@
     <link rel="stylesheet" href="fa.min.css">
     <link rel="stylesheet" href="style.css">
     <script>
-        (function() {
-            const theme = localStorage.getItem('theme') || 'system';
-            if (theme === 'light') {
+        (function () {
+            let config = JSON.parse(localStorage.getItem('userConfig'));
+            if (config.theme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
-            } else if (theme === 'dark') {
+            } else if (config.theme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            if(!localStorage.getItem("loggedInUsername")){
+                window.location.replace("login.html");
             }
         })();
     </script>
@@ -510,174 +513,6 @@
             }
         }
 
-        function populateStartDateInput() {
-            document.getElementById("startDate").value = currentStartDate;
-        }
-
-        async function saveStartDate() {
-            const startDateValue = document.getElementById("startDate").value;
-            try {
-                const response = await fetch('/startdate/edit', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(parseInt(startDateValue, 10))
-                });
-                showMessage('startDateMessage', response.ok ? 'Start date saved successfully' : 'Failed to save start date', response.ok);
-            } catch (error) {
-                console.error('Error saving start date:', error);
-                showMessage('startDateMessage', 'Error saving start date', false);
-            }
-        }
-        
-        async function fetchAndRenderRecurringExpenses() {
-            try {
-                const response = await fetch('/recurring-expenses');
-                if (!response.ok) throw new Error('Failed to fetch recurring expenses');
-                recurringExpenses = await response.json() || [];
-                renderRecurringExpenses(recurringExpenses);
-            } catch (error) {
-                console.error('Error fetching recurring expenses:', error);
-                document.getElementById('recurring-expenses-list').innerHTML = '<p>Error loading recurring expenses.</p>';
-            }
-        }
-
-        function findNextOccurrence(r) {
-            let nextDate = new Date(r.startDate);
-            const today = new Date();
-            if (nextDate >= today) return nextDate.toLocaleDateString();
-            if (r.occurrences > 0) {
-                let occurrencesCount = 0;
-                while (nextDate < today) {
-                    occurrencesCount++;
-                    if (occurrencesCount >= r.occurrences) return 'Finished';
-                    switch(r.interval) {
-                        case 'daily': nextDate.setDate(nextDate.getDate() + 1); break;
-                        case 'weekly': nextDate.setDate(nextDate.getDate() + 7); break;
-                        case 'monthly': nextDate.setMonth(nextDate.getMonth() + 1); break;
-                        case 'yearly': nextDate.setFullYear(nextDate.getFullYear() + 1); break;
-                    }
-                }
-                return nextDate.toLocaleDateString();
-            } else { // Indefinite
-                 while (nextDate < today) {
-                    switch(r.interval) {
-                        case 'daily': nextDate.setDate(nextDate.getDate() + 1); break;
-                        case 'weekly': nextDate.setDate(nextDate.getDate() + 7); break;
-                        case 'monthly': nextDate.setMonth(nextDate.getMonth() + 1); break;
-                        case 'yearly': nextDate.setFullYear(nextDate.getFullYear() + 1); break;
-                    }
-                }
-                return nextDate.toLocaleDateString();
-            }
-        }
-
-        function renderRecurringExpenses(recurring) {
-            const list = document.getElementById('recurring-expenses-list');
-            if (!recurring || recurring.length === 0) {
-                list.innerHTML = '<p>No recurring expenses found.</p>';
-                return;
-            }
-            list.innerHTML = `
-                <table class="expense-table">
-                    <thead><tr><th>Name</th><th>Amount</th><th>Category</th><th>Interval</th><th>Next Occurrence</th><th></th></tr></thead>
-                    <tbody>
-                        ${recurring.map(r => `
-                            <tr>
-                                <td>${r.name}</td>
-                                <td>${formatCurrency(r.amount)}</td>
-                                <td>${r.category}</td>
-                                <td>${r.interval.charAt(0).toUpperCase() + r.interval.slice(1)}</td>
-                                <td>${findNextOccurrence(r)}</td>
-                                <td>
-                                    <button class="edit-button" onclick="showRecurringEditModal('${r.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
-                                    <button class="delete-button" onclick="showRecurringDeleteModal('${r.id}')"><i class="fa-solid fa-trash-can"></i></button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>`;
-        }
-
-        function showRecurringDeleteModal(id) {
-            recurringExpenseToDelete = id;
-            document.getElementById('deleteRecurringModal').classList.add('active');
-        }
-
-        function closeRecurringDeleteModal() {
-            recurringExpenseToDelete = null;
-            document.getElementById('deleteRecurringModal').classList.remove('active');
-        }
-
-        async function confirmRecurringDelete(removeAll) {
-            if (!recurringExpenseToDelete) return;
-            try {
-                const response = await fetch(`/recurring-expense/delete?id=${recurringExpenseToDelete}&removeAll=${removeAll}`, { method: 'DELETE' });
-                if (!response.ok) throw new Error('Failed to delete recurring expense');
-                showMessage('recurringExpenseMessage', 'Recurring expense deleted successfully', true);
-                fetchAndRenderRecurringExpenses();
-            } catch (error) {
-                console.error('Error deleting recurring expense:', error);
-                showMessage('recurringExpenseMessage', 'Failed to delete recurring expense', false);
-            } finally {
-                closeRecurringDeleteModal();
-            }
-        }
-        
-        function showRecurringEditModal(id) {
-            recurringExpenseToEdit = recurringExpenses.find(r => r.id === id);
-            if (!recurringExpenseToEdit) return;
-            document.getElementById('editRecurringName').value = recurringExpenseToEdit.name;
-            document.getElementById('editRecurringAmount').value = Math.abs(recurringExpenseToEdit.amount);
-            document.getElementById('editRecurringReportGain').checked = recurringExpenseToEdit.amount > 0;
-            document.getElementById('editRecurringCategory').value = recurringExpenseToEdit.category;
-            document.getElementById('editRecurringInterval').value = recurringExpenseToEdit.interval;
-            document.getElementById('editRecurringStartDate').value = new Date(recurringExpenseToEdit.startDate).toISOString().split('T')[0];
-            document.getElementById('editRecurringOccurrences').value = recurringExpenseToEdit.occurrences;
-            editFormSelectedTags = new Set(recurringExpenseToEdit.tags || []);
-            createTagInput('edit-tags-input', 'edit-selected-tags', 'edit-tags-dropdown', editFormSelectedTags).renderSelected();
-            document.getElementById('editRecurringModal').classList.add('active');
-        }
-        
-        function closeRecurringEditModal() {
-            recurringExpenseToEdit = null;
-            document.getElementById('editRecurringModal').classList.remove('active');
-        }
-
-        async function confirmRecurringUpdate(updateAll) {
-            if (!recurringExpenseToEdit) return;
-            let amount = parseFloat(document.getElementById('editRecurringAmount').value);
-            if (!document.getElementById('editRecurringReportGain').checked) {
-                amount *= -1;
-            }
-
-            const updatedData = {
-                ...recurringExpenseToEdit,
-                name: document.getElementById('editRecurringName').value,
-                amount: amount,
-                category: document.getElementById('editRecurringCategory').value,
-                tags: Array.from(editFormSelectedTags),
-                interval: document.getElementById('editRecurringInterval').value,
-                startDate: new Date(document.getElementById('editRecurringStartDate').value).toISOString(),
-                occurrences: parseInt(document.getElementById('editRecurringOccurrences').value, 10)
-            };
-            
-            try {
-                const response = await fetch(`/recurring-expense/edit?id=${recurringExpenseToEdit.id}&updateAll=${updateAll}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedData)
-                });
-                if (!response.ok) throw new Error('Failed to update recurring expense');
-                showMessage('recurringExpenseMessage', 'Recurring expense updated successfully', true);
-                fetchAndRenderRecurringExpenses();
-            } catch(error) {
-                console.error('Error updating recurring expense:', error);
-                showMessage('recurringExpenseMessage', 'Failed to update recurring expense', false);
-            } finally {
-                closeRecurringEditModal();
-            }
-        }
-
         // --- Import/Export ---
         async function handleCsvImport(event) {
             const file = event.target.files[0];
@@ -824,6 +659,9 @@
         themeSelect.addEventListener('change', (e) => {
             const selectedTheme = e.target.value;
             localStorage.setItem('theme', selectedTheme);
+            let config = JSON.parse(localStorage.getItem("userConfig")) || {};
+            config.theme = selectedTheme;
+            localStorage.setItem("userConfig", JSON.stringify(config));
             applyTheme(selectedTheme);
             showMessage('themeMessage', 'Theme updated successfully.', true);
         });

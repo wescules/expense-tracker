@@ -9,6 +9,8 @@ import {
   doc,
   Timestamp,
   getDocs,
+  query,
+  where,
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -28,6 +30,7 @@ const firebaseConfig = {
 };
 
 const EXPENSES_COLLECTION = "expenses_collection";
+const CONFIG_COLLECTION = "user_config_collection";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -37,6 +40,39 @@ const analytics = getAnalytics(app);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
+async function loginUser(username, password) {
+    try {
+        const usersRef = collection(db, CONFIG_COLLECTION);
+        const q = query(usersRef,
+            where("username", "==", username),
+            where("password", "==", password) // Again, highly insecure for real passwords!
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            // No matching user found
+            console.warn("Login failed: No matching user found in users_config.");
+            return null; // Return null to indicate login failure
+        } else {
+            // User found! There should ideally be only one user per username.
+            const userDoc = querySnapshot.docs[0]; // Get the first (and hopefully only) matching document
+            const userData = userDoc.data();
+            console.log("Successfully logged in user from users_config:", userData.username);
+
+            // Here you might set a session variable or store user info locally
+            // to indicate the user is logged in.
+            // For now, let's pretend we store their username.
+            localStorage.setItem('loggedInUsername', userData.username);
+            localStorage.setItem('userConfig', JSON.stringify(userData));
+            return userData; // Return user data to indicate success
+        }
+    } catch (error) {
+        console.error("Error during custom login:", error);
+        authMessageDiv.textContent = `Login failed: ${error.message}`;
+        throw error;
+    }
+}
 async function getAllExpenses() {
   try {
     const querySnapshot = await getDocs(collection(db, EXPENSES_COLLECTION));
@@ -46,6 +82,7 @@ async function getAllExpenses() {
       const expense = doc.data();
       expenseList.push({ id: doc.id, ...expense });
     });
+    localStorage.setItem('allExpenses', JSON.stringify(expenseList));
     return expenseList;
   } catch (error) {
     console.error("Error getting documents: ", error);
@@ -100,4 +137,5 @@ async function deleteExpense(documentId) {
 window.getAllExpenses = getAllExpenses;
 window.addExpense = addExpense;
 window.updateExpense = updateExpense;
-window.deleteExpense = deleteExpense; 
+window.deleteExpense = deleteExpense;
+window.loginUser = loginUser;
