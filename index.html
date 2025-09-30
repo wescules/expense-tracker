@@ -369,9 +369,10 @@
                 legendContainer.appendChild(item);
             });
 
+            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
             const activeTotalExpenses = monthExpenses
                 .filter(exp => exp.amount < 0 && !disabledCategories.has(exp.category)).reduce((sum, exp) => sum +
-                    Math.abs(exp.amount), 0);
+                    convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo), 0);
 
             const totalsHtml = `
                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
