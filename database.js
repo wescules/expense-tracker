@@ -31,7 +31,7 @@ const firebaseConfig = {
 
 const EXPENSES_COLLECTION = "expenses_collection";
 const CONFIG_COLLECTION = "user_config_collection";
-
+const CATEGORY_COLLECTION = "category_collection";
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -39,6 +39,66 @@ const analytics = getAnalytics(app);
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
+
+
+async function getAllCategories() {
+  try {
+    const querySnapshot = await getDocs(collection(db, CATEGORY_COLLECTION));
+    
+    const categoryDoc = querySnapshot.docs[0]
+    const categoryData = categoryDoc.data();
+    localStorage.setItem('allCategories', JSON.stringify(categoryData));
+    return categoryData;
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+  }
+  return []; // Return an empty array in case of error
+}
+
+// Function to update a category
+async function updateCategories(updatedFields) {
+    const categoryDocId = "Myg158nkJL86cI1rMr4J" // firestore has only 1 doc in this collection
+    const categoryRef = doc(db, CATEGORY_COLLECTION, categoryDocId);
+    console.log('Updating categories with fields:', updatedFields);
+    try{
+        await updateDoc(categoryRef, {
+            ...updatedFields, // Spread the updated fields
+            updatedAt: Timestamp.now() // Always update the 'updatedAt' timestamp
+        });
+        console.log(updatedFields)
+        localStorage.setItem('allCategories', JSON.stringify(updatedFields));
+        console.log("Document successfully updated!");
+        return true;
+    } catch (error) {
+        console.error("Error updating document: ", error);
+    }
+    return false
+}
+
+async function updateUserConfig() {
+    try{
+        const usersRef = collection(db, CONFIG_COLLECTION);
+        const username = localStorage.getItem('loggedInUsername');
+        let config = JSON.parse(localStorage.getItem('userConfig'));
+        const q = query(usersRef,
+            where("username", "==", username),
+        );
+
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const userDoc = querySnapshot.docs[0];
+            await updateDoc(userDoc.ref, {
+                ...config,
+                updatedAt: Timestamp.now()
+            });
+            console.log("Document successfully updated!");
+            return true;
+        }
+    } catch (error) {
+        console.error("Error updating document: ", error);
+    }
+    return false
+}
 
 async function loginUser(username, password) {
     try {
@@ -139,3 +199,6 @@ window.addExpense = addExpense;
 window.updateExpense = updateExpense;
 window.deleteExpense = deleteExpense;
 window.loginUser = loginUser;
+window.getAllCategories = getAllCategories;
+window.updateCategories = updateCategories;
+window.updateUserConfig = updateUserConfig;

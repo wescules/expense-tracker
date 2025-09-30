@@ -5,34 +5,34 @@ const colorPalette = [
 ];
 const currencyBehaviors = {
     "usd": { symbol: "$", useComma: false, useDecimals: true },
-    "eur": { symbol: "€", useComma: true, useDecimals: true },
-    "gbp": { symbol: "£", useComma: false, useDecimals: true },
-    "jpy": { symbol: "¥", useComma: false, useDecimals: false },
     "cny": { symbol: "¥", useComma: false, useDecimals: true },
-    "krw": { symbol: "₩", useComma: false, useDecimals: false },
     "inr": { symbol: "₹", useComma: false, useDecimals: true },
-    "rub": { symbol: "₽", useComma: true, useDecimals: true },
-    "brl": { symbol: "R$", useComma: true, useDecimals: true },
-    "zar": { symbol: "R", useComma: false, useDecimals: true },
-    "aed": { symbol: "AED", useComma: false, useDecimals: true },
-    "aud": { symbol: "A$", useComma: false, useDecimals: true },
-    "cad": { symbol: "C$", useComma: false, useDecimals: true },
-    "chf": { symbol: "Fr", useComma: false, useDecimals: true },
-    "hkd": { symbol: "HK$", useComma: false, useDecimals: true },
-    "bdt": { symbol: "৳", useComma: false, useDecimals: true },
-    "sgd": { symbol: "S$", useComma: false, useDecimals: true },
-    "thb": { symbol: "฿", useComma: false, useDecimals: true },
-    "try": { symbol: "₺", useComma: true, useDecimals: true },
-    "mxn": { symbol: "Mex$", useComma: false, useDecimals: true },
-    "php": { symbol: "₱", useComma: false, useDecimals: true },
-    "pln": { symbol: "zł", useComma: true, useDecimals: true },
-    "sek": { symbol: "kr", useComma: false, useDecimals: true },
-    "nzd": { symbol: "NZ$", useComma: false, useDecimals: true },
-    "dkk": { symbol: "kr.", useComma: true, useDecimals: true },
-    "idr": { symbol: "Rp", useComma: false, useDecimals: true },
-    "ils": { symbol: "₪", useComma: false, useDecimals: true },
-    "vnd": { symbol: "₫", useComma: true, useDecimals: false },
-    "myr": { symbol: "RM", useComma: false, useDecimals: true },
+    // "eur": { symbol: "€", useComma: true, useDecimals: true },
+    // "gbp": { symbol: "£", useComma: false, useDecimals: true },
+    // "jpy": { symbol: "¥", useComma: false, useDecimals: false },
+    // "krw": { symbol: "₩", useComma: false, useDecimals: false },
+    // "rub": { symbol: "₽", useComma: true, useDecimals: true },
+    // "brl": { symbol: "R$", useComma: true, useDecimals: true },
+    // "zar": { symbol: "R", useComma: false, useDecimals: true },
+    // "aed": { symbol: "AED", useComma: false, useDecimals: true },
+    // "aud": { symbol: "A$", useComma: false, useDecimals: true },
+    // "cad": { symbol: "C$", useComma: false, useDecimals: true },
+    // "chf": { symbol: "Fr", useComma: false, useDecimals: true },
+    // "hkd": { symbol: "HK$", useComma: false, useDecimals: true },
+    // "bdt": { symbol: "৳", useComma: false, useDecimals: true },
+    // "sgd": { symbol: "S$", useComma: false, useDecimals: true },
+    // "thb": { symbol: "฿", useComma: false, useDecimals: true },
+    // "try": { symbol: "₺", useComma: true, useDecimals: true },
+    // "mxn": { symbol: "Mex$", useComma: false, useDecimals: true },
+    // "php": { symbol: "₱", useComma: false, useDecimals: true },
+    // "pln": { symbol: "zł", useComma: true, useDecimals: true },
+    // "sek": { symbol: "kr", useComma: false, useDecimals: true },
+    // "nzd": { symbol: "NZ$", useComma: false, useDecimals: true },
+    // "dkk": { symbol: "kr.", useComma: true, useDecimals: true },
+    // "idr": { symbol: "Rp", useComma: false, useDecimals: true },
+    // "ils": { symbol: "₪", useComma: false, useDecimals: true },
+    // "vnd": { symbol: "₫", useComma: true, useDecimals: false },
+    // "myr": { symbol: "RM", useComma: false, useDecimals: true },
 };
 
 // let currentCurrency = 'usd';
@@ -74,7 +74,6 @@ function formatCurrency(amount) {
 }
 
 function formatCurrencyInTable(amount, currency) {
-    console.log('Formatting amount:', amount, 'with currency:', currency);
     const behavior = currencyBehaviors[currency] || { symbol: '$', useComma: false, useDecimals: true };
     const isNegative = amount < 0;
     const absAmount = Math.abs(amount);
