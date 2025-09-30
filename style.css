@@ -7,6 +7,22 @@
     --border: #1a365d;
     --accent: #69afde;
 }
+
+.circle-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.circle-img:hover {
+  transform: scale(2); /* zooms in */
+  z-index: 10;
+  position: relative;
+}
+
 #toggleExpenseFormBtn {
   position: fixed;
   bottom: 20px;   /* distance from bottom */

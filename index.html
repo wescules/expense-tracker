@@ -36,7 +36,7 @@
                     <img src="pwa/icon-192.png" alt="ExpenseOwl Logo" height="85"
                         style="vertical-align: middle; margin-right: 20px;">
                 </a>
-                <a href="/index.html" class="view-button active" data-tooltip="Dashboard">
+                <a href="index.html" class="view-button active" data-tooltip="Dashboard">
                     <i class="fa-solid fa-chart-pie"></i>
                 </a>
                 <a href="table.html" class="view-button" data-tooltip="Table View">
@@ -158,7 +158,7 @@
     <script type="module" src="database.js"></script>
     <script src="functions.js"></script>
     <script>
-        let currentCurrency = 'USD';
+        let currentCurrency = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo
         let startDate = 1;
         let pieChart = null;
         let currentDate = new Date();
@@ -174,25 +174,33 @@
                 return `<div class="no-data">${message}</div>`;
             }
             const hasTags = expenses.some(exp => exp.tags && exp.tags.length > 0);
+            
             return `
                 <table class="expense-table">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Name</th>
-                            <th>Category</th>
+                            <th>Date</th>
                             ${hasTags ? '<th class="tags-column">Tags</th>' : ''}
                             <th>Amount</th>
-                            <th>Date</th>
+                            
                         </tr>
                     </thead>
                     <tbody>
                         ${expenses.map((expense, index) => `
                             <tr>
-                                <td>${escapeHTML(expense.name)}</td>
-                                <td>${escapeHTML(expense.category)}</td>
+                                <td style="text-align: center">
+                                     ${expense.user == 'wescules' ? `<img src="wes.jpg" class="circle-img">`
+                                                        : `<img src="abbie.jpg" class="circle-img">`}
+                                </td>
+                                <td>
+                                    <div>${escapeHTML(expense.name)}</div>
+                                    <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
+                                </td>
+                                <td>${formatDateFromUTC(expense.date).slice(0, 6)}</td>
                                 ${hasTags ? `<td class="tags-column">${(expense.tags || []).map(escapeHTML).join(', ')}</td>` : ''}
-                                <td class="amount">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
-                                <td>${formatDateFromUTC(expense.date).slice(0, 5)}</td>
+                                <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
                                 
                             </tr>
                         `).join('')}
@@ -222,9 +230,10 @@
         function calculateCategoryBreakdown(expenses) {
             const categoryTotals = {};
             let totalAmount = 0;
+            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
             expenses.forEach(exp => {
                 if (exp.amount < 0 && !disabledCategories.has(exp.category)) {
-                    const amount = Math.abs(exp.amount);
+                    const amount = convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo);
                     categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + amount; totalAmount += amount;
                 }
             });
@@ -243,8 +252,9 @@
         }
 
         function calculateExpenses(expenses) {
+            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
             return expenses
-                .filter(exp => exp.amount < 0).reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
+                .filter(exp => exp.amount < 0).reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo), 0);
         }
 
         function updateChartAndLegend() {
@@ -263,17 +273,29 @@
                 noDataMessage.style.display = 'none'; const categoryData = calculateCategoryBreakdown(monthExpenses);
                 updateCashflow(monthExpenses); createPieChart(categoryData); updateLegend(categoryData);
             }
-        } function
-            updateCashflow(expenses) {
-                const income = calculateIncome(expenses); const
-                    expenseTotal = calculateExpenses(expenses); const balance = income - expenseTotal;
+        }
+
+          const currencySelect = document.getElementById("currency");
+
+        // Load from localStorage
+        const cachedCurrency = localStorage.getItem("userConfig") ? JSON.parse(localStorage.getItem("userConfig")).defaultInputCurrency : null;
+        if (cachedCurrency) {
+            currencySelect.value = cachedCurrency; // set dropdown
+        }
+
+        
+        function updateCashflow(expenses) {
+            const income = calculateIncome(expenses);
+            const expenseTotal = calculateExpenses(expenses);
+            const balance = income - expenseTotal;
             document.getElementById('cashflow-income').textContent = formatCurrency(income);
             document.getElementById('cashflow-expenses').textContent = formatCurrency(expenseTotal);
-            document.getElementById('cashflow-balance').textContent = formatCurrency(balance); const
-                balanceElement = document.getElementById('cashflow-balance'); if (balance >= 0) {
-                    balanceElement.classList.add('positive');
-                    balanceElement.classList.remove('negative');
-                } else {
+            document.getElementById('cashflow-balance').textContent = formatCurrency(balance);
+            const balanceElement = document.getElementById('cashflow-balance');
+            if (balance >= 0) {
+                balanceElement.classList.add('positive');
+                balanceElement.classList.remove('negative');
+            } else {
                 balanceElement.classList.add('negative');
                 balanceElement.classList.remove('positive');
             }
@@ -373,31 +395,19 @@
             updateChartAndLegend();
         }
 
+        async function getCategories() {
+            return JSON.parse(localStorage.getItem("allCategories"))
+                        || await getAllCategories();
+        }
+
         async function initialize() {
             
             try {
-                const config = {
-                    "categories": [
-                        "Restaurant",
-                        "Groceries",
-                        "Travel",
-                        "Rent",
-                        "Utilities",
-                        "Entertainment",
-                        "Healthcare",
-                        "Shopping",
-                        "Miscellaneous",
-                        "Income"
-                    ],
-                    "currency": "USD",
-                    "startDate": 1,
-                    "recurringExpenses": []
-                };
+                const config = await getCategories()
                 const categorySelect = document.getElementById('category');
                 categorySelect.innerHTML = config.categories.map(cat =>
                     `<option value="${cat}">${cat}</option>`
                 ).join('');
-                currentCurrency = config.currency;
                 
                 const cached = localStorage.getItem('allExpenses');
                 if (cached) {
@@ -568,6 +578,7 @@
                     messageDiv.className = 'form-message success';
                     document.getElementById('expenseForm').reset();
                     document.getElementById('selected-tags').innerHTML = '';
+                    document.getElementById('deleteModal').classList.remove('active');
                     selectedTags.clear();
                     await initialize();
                     const today = new Date();

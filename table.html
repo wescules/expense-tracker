@@ -121,13 +121,22 @@
     <script type="module" src="database.js"></script>
 
     <script>
-        let currentCurrency = 'usd';
+        let currentCurrency = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo;
         let currentDate = new Date();
         let allExpenses = [];
         let expensesForTable = [];
         let startDate = 1;
         let allTags = new Set();
         let selectedTags = new Set();
+        let categoryColors = {}
+
+        function assignCategoryColors(categories) {
+            categories.forEach((category, index) => {
+                if (!categoryColors[category]) {
+                    categoryColors[category] = colorPalette[index % colorPalette.length];
+                }
+            });
+        }
 
         function createTable(expenses) {
             if (!expenses || expenses.length === 0) {
@@ -142,21 +151,23 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Category</th>
                             ${hasTags ? '<th class="tags-column">Tags</th>' : ''}
+                            <th>Date</th>
                             <th>Amount</th>
-                            <th class="date-header">Date</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         ${expenses.map((expense, index) => `
                             <tr>
-                                <td>${escapeHTML(expense.name)}</td>
-                                <td>${escapeHTML(expense.category)}</td>
+                                <td>
+                                    <div>${escapeHTML(expense.name)}</div>
+                                    <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
+                                </td>
+                                <td >${formatDateFromUTC(expense.date).slice(0, 6)}</td>
                                 ${hasTags ? `<td class="tags-column">${(expense.tags || []).map(escapeHTML).join(', ')}</td>` : ''}
-                                <td class="amount">${formatCurrency(expense.amount)}</td>
-                                <td class="date-column">${formatDateFromUTC(expense.date)}</td>
+                                <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
+                                
                                 <td>
                                     <button class="edit-button" onclick="editExpenseByIndex(${index})">
                                         <i class="fa-solid fa-pen-to-square"></i>
@@ -307,31 +318,19 @@
             });
         }
 
+        async function getCategories() {
+            return JSON.parse(localStorage.getItem("allCategories"))
+                        || await getAllCategories();
+        }
+
         async function initialize() {
             try {
-                const config = {
-                    "categories": [
-                        "Food",
-                        "Groceries",
-                        "Travel",
-                        "Rent",
-                        "Utilities",
-                        "Entertainment",
-                        "Healthcare",
-                        "Shopping",
-                        "Miscellaneous",
-                        "Income"
-                    ],
-                    "currency": "usd",
-                    "startDate": 1,
-                    "recurringExpenses": []
-                };
+                const config = await getCategories()
                 const categorySelect = document.getElementById('category');
                 categorySelect.innerHTML = config.categories.map(cat => 
                     `<option value="${cat}">${cat}</option>`
                 ).join('');
-                currentCurrency = config.currency;
-                startDate = config.startDate;
+                startDate = 1;
                 
                 const cached = localStorage.getItem('allExpenses');
                 if (cached) {
@@ -357,6 +356,8 @@
                     }
                 });
 
+                const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
+                assignCategoryColors(uniqueCategories);
                 updateMonthDisplay();
                 updateTable();
                 setupTagInput();

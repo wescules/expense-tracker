@@ -152,13 +152,15 @@ async function getAllExpenses() {
 
 async function addExpense(formData) {
     try {
+        const username = localStorage.getItem('loggedInUsername');
         const docRef = await addDoc(collection(db, EXPENSES_COLLECTION), {
             name: formData.name,
             amount: parseFloat(formData.amount),
             date: formData.date,
             category: formData.category,
             tags: formData.tags,
-            currency: formData.currency
+            currency: formData.currency,
+            user: username
         });
         console.log("Document written with ID: ", docRef.id);
         return docRef.id;
