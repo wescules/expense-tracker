@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="style.css">
     <script>
         (function () {
+            if(!localStorage.getItem("loggedInUsername")){
+                window.location.replace("login.html");
+            }
             let config = JSON.parse(localStorage.getItem('userConfig'));
             if (config.theme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
             } else if (config.theme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
-            }
-            if(!localStorage.getItem("loggedInUsername")){
-                window.location.replace("login.html");
             }
         })();
     </script>
