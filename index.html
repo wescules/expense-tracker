@@ -160,6 +160,7 @@
     </div>
     <script type="module" src="js/database.js"></script>
     <script src="js/functions.js"></script>
+    <script src="js/categoryPicker.js"></script>
     <script>
 
         let currentCurrency = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo
@@ -663,7 +664,15 @@
             document.getElementById('deleteModal').classList.add('active');
             const input = document.getElementById("name");
             input.focus();
+        });
 
+        document.getElementById('name').addEventListener('input', function (e) {
+            const value = document.getElementById('name').value.trim();
+            if (value){
+                const category = categorizeExpense(value);
+                console.log(category)
+                document.getElementById('category').value = category;
+            }
         });
 
         document.getElementById('expenseForm').addEventListener('submit', async (e) => {
