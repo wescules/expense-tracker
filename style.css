@@ -146,7 +146,7 @@ header {
     padding: 0.5rem 1.25rem;
     font-weight: 500;
     transition: all 0.2s ease;
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
 }
 
 .nav-button:hover, .edit-button:hover {
