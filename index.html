@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="fa.min.css">
+    <link rel="stylesheet" href="css/fa.min.css">
     <meta name="theme-color" content="#1a1a1a">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="pwa/icon-192.png">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <script>
         (function () {
             if(!localStorage.getItem("loggedInUsername")){
@@ -25,7 +25,7 @@
         })();
     </script>
     <title>ExpenseOwl Dashboard</title>
-    <script src="chart.min.js"></script>
+    <script src="js/chart.min.js"></script>
 </head>
 
 <body>
@@ -34,7 +34,7 @@
             <div class="nav-bar">
                 <a href="/">
                     <img src="pwa/icon-192.png" alt="ExpenseOwl Logo" height="85"
-                        style="vertical-align: middle; margin-right: 20px;">
+                        style="vertical-align: middle; margin-right: 20px;" fetchpriority="high">
                 </a>
                 <a href="index.html" class="view-button active" data-tooltip="Dashboard">
                     <i class="fa-solid fa-chart-pie"></i>
@@ -93,7 +93,7 @@
             <div class="form-container">
                 <form id="expenseForm" class="expense-form">
                     <div class="form-group">
-                        <input type="text" id="name" value="" required placeholder="Description">
+                        <input type="text" id="name" value="" required placeholder="Description" autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -105,7 +105,7 @@
                                 <!-- add more as needed -->
                             </select>
 
-                            <input type="number" id="amount" step="0.01" min="0.01" max="9000000000000000" required placeholder="Price (0.00)" style="max-width: 117px;">
+                            <input type="number" id="amount" autocomplete="off" step="0.01" min="0.01" max="9000000000000000" required placeholder="Price (0.00)" style="max-width: 117px;">
                         </div>
                     </div>
 
@@ -146,7 +146,10 @@
 
                     <div class="modal-buttons">
                         <button class="modal-button" onclick="closeAddExpenseModal()">Cancel</button>
-                        <button type="submit" class="modal-button confirm" onclick="saveExpense(event)">Save</button>
+                        <button id="saveBtn" type="submit" class="modal-button confirm">
+                            <span id="save-btn-text" class="btn-text">Submit</span>
+                            <span id="saveSpinner" class="spinner" style="display:none;"></span>
+                        </button>
                     </div>
 
                 </form>
@@ -155,8 +158,8 @@
         </div>
         </div>
     </div>
-    <script type="module" src="database.js"></script>
-    <script src="functions.js"></script>
+    <script type="module" src="js/database.js"></script>
+    <script src="js/functions.js"></script>
     <script>
 
         let currentCurrency = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo
@@ -184,8 +187,6 @@
                 return acc;
             }, {});
 
-            console.log(aggregated);
-
             return `
                 <table class="expense-table">
                     <thead>
@@ -210,8 +211,8 @@
         <tr>
           <td style="text-align: center">
             ${expense.user === 'wescules'
-              ? `<img src="wes.jpg" class="circle-img">`
-              : `<img src="abbie.jpg" class="circle-img">`
+              ? `<img src="img/wes.webp" class="circle-img">`
+              : `<img src="img/abbie.webp" class="circle-img">`
             }
           </td>
           <!-- <td>${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td> -->
@@ -682,9 +683,20 @@
             };
             console.log('Form Data to submit:', formData);
             try {
+                const spinner = document.getElementById("saveSpinner");
+                const saveBtnText = document.getElementById("save-btn-text");
+                const saveBtn = document.getElementById("saveBtn");
+                saveBtn.disabled = true;
+                saveBtnText.style.opacity = 0;
+                spinner.style.display = "inline-block";
+
+
                 const response = await addExpense(formData);
                 const messageDiv = document.getElementById('formMessage');
                 if (response) {
+                    spinner.style.display = "none";
+                    saveBtnText.style.opacity = 1;
+                    saveBtn.disabled = false;
                     messageDiv.textContent = 'Expense added successfully!';
                     messageDiv.className = 'form-message success';
                     document.getElementById('expenseForm').reset();
