@@ -483,9 +483,20 @@
         async function initialize() {
             try {
                 const expensesResponse = JSON.parse(localStorage.getItem("allExpenses"))
-                const categoriesResponse = await getCategories()
                 const configResponse = JSON.parse(localStorage.getItem("userConfig"))
+                let cached = localStorage.getItem("allCategories")
 
+                if (cached) {
+                    categories = JSON.parse(cached).categories || [];
+                    currentCurrency = configResponse.currency;
+                    currentStartDate = 1;
+                    allTags.clear();
+                    (expensesResponse || []).forEach(exp => (exp.tags || []).forEach(tag => allTags.add(tag)));
+                    renderCategories();
+                    populateCurrencySelect();
+
+                }
+                const categoriesResponse = await getCategories()
                 categories = categoriesResponse.categories || [];
                 currentCurrency = configResponse.currency;
                 currentStartDate = 1;
