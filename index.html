@@ -176,36 +176,59 @@
                 return `<div class="no-data">${message}</div>`;
             }
             const hasTags = expenses.some(exp => exp.tags && exp.tags.length > 0);
-            
+            // Aggregate by day
+            const aggregated = expenses.reduce((acc, expense) => {
+                const date = new Date(expense.date).toISOString().split('T')[0]; // "YYYY-MM-DD"
+                if (!acc[date]) acc[date] = [];
+                acc[date].push(expense);
+                return acc;
+            }, {});
+
+            console.log(aggregated);
+
             return `
                 <table class="expense-table">
                     <thead>
                         <tr>
                             <th></th>
-                            <th>Expense</th>
-                            <th>Date</th>
-                            ${hasTags ? '<th class="tags-column">Tags</th>' : ''}
-                            <th>Amount</th>
+                            <th></th>
+                            <th></th>
                             
                         </tr>
                     </thead>
                     <tbody>
-                        ${expenses.map((expense, index) => `
-                            <tr>
-                                <td style="text-align: center">
-                                     ${expense.user == 'wescules' ? `<img src="wes.jpg" class="circle-img">`
-                                                        : `<img src="abbie.jpg" class="circle-img">`}
-                                </td>
-                                <td>
-                                    <div>${escapeHTML(expense.name)}</div>
-                                    <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
-                                </td>
-                                <td>${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td>
-                                ${hasTags ? `<td class="tags-column">${(expense.tags || []).map(escapeHTML).join(', ')}</td>` : ''}
-                                <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
-                                
-                            </tr>
-                        `).join('')}
+                       ${Object.keys(aggregated)
+  .sort()
+  .reverse()
+  .map(date => {
+    // Optional: display the date as a header
+    const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(date).slice(0, 6).replace(',', '')}</td>`;
+
+    // Map over each expense for this date
+    const rows = aggregated[date]
+      .map(expense => `
+        <tr>
+          <td style="text-align: center">
+            ${expense.user === 'wescules'
+              ? `<img src="wes.jpg" class="circle-img">`
+              : `<img src="abbie.jpg" class="circle-img">`
+            }
+          </td>
+          <!-- <td>${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td> -->
+          <td>
+            <div>${escapeHTML(expense.name)}</div>
+            <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
+          </td>
+          <td class="amount" style="color: #e74c3c; text-align: center;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
+        </tr>
+      `)
+      .join(''); // join all rows for this date
+
+    return dateHeader + rows; // combine header + rows
+  })
+  .join('') // join all dates together
+}
+
                     </tbody>
                 </table>
             `;
