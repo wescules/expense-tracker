@@ -85,8 +85,21 @@
         </div>
     </div>
 
-
     <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3>Delete Expense</h3>
+            <p>Are you sure you want to delete this expense? (cannot be undone)</p>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="closeDeleteModal()">Cancel</button>
+                <button id="deleteBtn" type="submit" class="modal-button confirm" onclick="confirmDelete()">
+                    <span id="delete-btn-text" class="btn-text">Delete</span>
+                    <span id="deleteSpinner" class="spinner" style="display:none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addExpenseModal" class="modal">
         <div class="modal-content">
             
             <div id="addExpenseContainer">
@@ -175,7 +188,7 @@
                             <th></th>
                             <th></th>
                             <th></th>
-                            
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -202,6 +215,11 @@
             <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
           </td>
           <td class="amount" style="color: #e74c3c; text-align: center;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
+          <td>                
+                <button class="delete-button" onclick="handleDeleteClick(event, '${expense.id}')">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </td>
         </tr>
       `)
       .join(''); // join all rows for this date
@@ -552,7 +570,7 @@
         });
 
         document.getElementById('toggleExpenseFormBtn').addEventListener('click', function () {
-            document.getElementById('deleteModal').classList.add('active');
+            document.getElementById('addExpenseModal').classList.add('active');
             const input = document.getElementById("name");
             input.focus();
         });
@@ -573,6 +591,59 @@
                 form.reportValidity();
             }else{
                 await submitExpenseForm(e);
+            }
+        });
+
+        let expenseToDelete = null;
+
+        function showDeleteModal(id) {
+            expenseToDelete = id;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function handleDeleteClick(event, id) {
+            if (event.shiftKey) {
+                expenseToDelete = id;
+                confirmDelete();
+            } else {
+                showDeleteModal(id);
+            }
+        }
+
+        function closeDeleteModal() {
+            expenseToDelete = null;
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        async function confirmDelete() {
+            if (!expenseToDelete) return;
+            try {
+                const spinner = document.getElementById("deleteSpinner");
+                const deleteBtnText = document.getElementById("delete-btn-text");
+                const deleteBtn = document.getElementById("deleteBtn");
+                deleteBtn.disabled = true;
+                deleteBtnText.style.opacity = 0;
+                spinner.style.display = "inline-block";
+
+                const response = await deleteExpense(expenseToDelete);
+                if (!response) {
+                    throw new Error('Failed to delete expense from database');
+                }
+                spinner.style.display = "none";
+                deleteBtnText.style.opacity = 1;
+                deleteBtn.disabled = false;
+                
+                closeDeleteModal();
+                await initialize();
+            } catch (error) {
+                console.error('Error deleting expense:', error);
+                alert('Failed to delete expense. Please try again.');
+            }
+        }
+
+        document.getElementById('deleteModal').addEventListener('click', (e) => {
+            if (e.target.className === 'modal active') {
+                closeDeleteModal();
             }
         });
 
@@ -608,7 +679,7 @@
                     messageDiv.textContent = 'Expense added successfully!';
                     messageDiv.className = 'form-message success';
                     document.getElementById('expenseForm').reset();
-                    document.getElementById('deleteModal').classList.remove('active');
+                    document.getElementById('addExpenseModal').classList.remove('active');
                     await initialize();
                     const today = new Date();
                     const year = today.getFullYear();
@@ -633,7 +704,7 @@
         }
 
         function closeAddExpenseModal() {
-            document.getElementById('deleteModal').classList.remove('active');
+            document.getElementById('addExpenseModal').classList.remove('active');
         }
         
         document.addEventListener('DOMContentLoaded', initialize);

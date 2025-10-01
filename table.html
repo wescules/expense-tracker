@@ -423,9 +423,9 @@
                 spinner.style.display = "none";
                 deleteBtnText.style.opacity = 1;
                 deleteBtn.disabled = false;
-
-                await initialize();
+                
                 closeDeleteModal();
+                await initialize();
             } catch (error) {
                 console.error('Error deleting expense:', error);
                 alert('Failed to delete expense. Please try again.');
