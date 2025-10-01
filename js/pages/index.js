@@ -410,12 +410,12 @@
 
         document.getElementById('toggleExpenseFormBtn').addEventListener('click', function () {
             document.getElementById('addExpenseModal').classList.add('active');
-            const input = document.getElementById("name");
+            const input = document.getElementById("name_custom");
             input.focus();
         });
 
-        document.getElementById('name').addEventListener('input', function (e) {
-            const value = document.getElementById('name').value.trim();
+        document.getElementById('name_custom').addEventListener('input', function (e) {
+            const value = document.getElementById('name_custom').value.trim();
             if (value){
                 const category = categorizeExpense(value);
                 document.getElementById('category').value = category;
@@ -491,7 +491,7 @@
             let amount = parseFloat(document.getElementById('amount').value);
 
             const formData = {
-                name: document.getElementById('name').value,
+                name: document.getElementById('name_custom').value,
                 category: document.getElementById('category').value,
                 amount: -amount,
                 date: getISODateWithLocalTime(document.getElementById('date').value),
@@ -548,7 +548,7 @@
         
         document.addEventListener('DOMContentLoaded', initialize);
 
-        document.getElementById('name').addEventListener('click', (e) => {
+        document.getElementById('name_custom').addEventListener('click', (e) => {
             if (e.target.value === '-') {
                 e.target.value = '';
             }
