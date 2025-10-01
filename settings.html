@@ -474,10 +474,6 @@
                 event.target.value = '';
             }
         }
-
-        async function getCategories() {
-            return JSON.parse(localStorage.getItem("allCategories"))
-                        || await getAllCategories();
 }
         // --- Initialization ---
         async function initialize() {
@@ -487,7 +483,6 @@
                 let cached = localStorage.getItem("allCategories")
 
                 if (cached) {
-                    console.log("Using cached categories");
                     categories = JSON.parse(cached).categories || [];
                     currentCurrency = configResponse.currency;
                     currentStartDate = 1;
@@ -497,8 +492,7 @@
                     populateCurrencySelect();
 
                 }
-                console.log("Fetching categories from server");
-                const categoriesResponse = await getCategories()
+                const categoriesResponse = await getAllCategories()
                 categories = categoriesResponse.categories || [];
                 currentCurrency = configResponse.currency;
                 currentStartDate = 1;
