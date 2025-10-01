@@ -423,23 +423,34 @@
             updateChartAndLegend();
         }
 
-        async function getCategories() {
-            return JSON.parse(localStorage.getItem("allCategories"))
-                        || await getAllCategories();
+        function populateCategoryDropDown(categories) {
+            try {
+                const categorySelect = document.getElementById('category');
+                let parsedCategories = [];
+                if(typeof categories === 'object' && categories.categories){
+                    parsedCategories = categories.categories
+                }else if (typeof categories === 'string'){
+                    parsedCategories = JSON.parse(categories).categories
+                }
+                categorySelect.innerHTML = parsedCategories.map(cat =>
+                    `<option value="${cat}">${cat}</option>`
+                ).join('');
+            } catch (error) {
+                console.warn('Failed to populate category dropdown:', error);
+            }
         }
 
         async function initialize() {
             
             try {
-                const config = await getCategories()
-                const categorySelect = document.getElementById('category');
-                categorySelect.innerHTML = config.categories.map(cat =>
-                    `<option value="${cat}">${cat}</option>`
-                ).join('');
-                
-                const cached = localStorage.getItem('allExpenses');
-                if (cached) {
-                    allExpenses = JSON.parse(cached);
+                let cachedCategories = localStorage.getItem("allCategories")
+                if (cachedCategories) {
+                    populateCategoryDropDown(cachedCategories);
+                }
+
+                const cachedExpenses = localStorage.getItem('allExpenses');
+                if (cachedExpenses) {
+                    allExpenses = JSON.parse(cachedExpenses);
                     allTags.clear();
                     allExpenses.forEach(exp => {
                         if (exp.tags) {
@@ -453,8 +464,7 @@
                     updateTable();
                     setupTagInput();
                 }
-
-                const data = await getAllExpenses();
+                const [data, categories] = await Promise.all([getAllExpenses(), getAllCategories()]);
                 if (!data) throw new Error('Failed to fetch expenses');
                 allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses
                     : []);
@@ -467,6 +477,7 @@
                 });
 
                 const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
+                populateCategoryDropDown(categories);
                 assignCategoryColors(uniqueCategories);
                 updateMonthDisplay();
                 updateChartAndLegend();
@@ -670,7 +681,6 @@
             const value = document.getElementById('name').value.trim();
             if (value){
                 const category = categorizeExpense(value);
-                console.log(category)
                 document.getElementById('category').value = category;
             }
         });

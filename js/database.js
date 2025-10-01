@@ -35,17 +35,27 @@ const app = initializeApp(firebaseConfig);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
+function getCachedCategories() {
+    const cachedCategories = localStorage.getItem('allCategories')
+    if(cachedCategories){
+        return JSON.parse(cachedCategories)
+    }
+}
 
 async function getAllCategories() {
   try {
     const querySnapshot = await getDocs(collection(db, CATEGORY_COLLECTION));
     
     const categoryDoc = querySnapshot.docs[0]
-    const categoryData = categoryDoc.data();
-    localStorage.setItem('allCategories', JSON.stringify(categoryData));
-    return categoryData;
+    if (categoryDoc){
+        const categoryData = categoryDoc.data();
+        localStorage.setItem('allCategories', JSON.stringify(categoryData));
+        return categoryData;
+    }
+    return getCachedCategories()
   } catch (error) {
     console.error("Error getting documents: ", error);
+    return getCachedCategories()
   }
   return []; // Return an empty array in case of error
 }
@@ -137,10 +147,16 @@ async function getAllExpenses() {
       const expense = doc.data();
       expenseList.push({ id: doc.id, ...expense });
     });
-    localStorage.setItem('allExpenses', JSON.stringify(expenseList));
+    if (expenseList.length > 0){
+        localStorage.setItem('allExpenses', JSON.stringify(expenseList));
+    }
     return expenseList;
   } catch (error) {
     console.error("Error getting documents: ", error);
+    const cachedExpenses = localStorage.getItem('allExpenses')
+    if(cachedExpenses){
+        return JSON.parse(cachedExpenses)
+    }
   }
   return []; // Return an empty array in case of error
 }
