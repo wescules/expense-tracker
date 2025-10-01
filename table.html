@@ -112,7 +112,10 @@
             <p>Are you sure you want to delete this expense? (cannot be undone)</p>
             <div class="modal-buttons">
                 <button class="modal-button" onclick="closeDeleteModal()">Cancel</button>
-                <button class="modal-button confirm" onclick="confirmDelete()">Delete</button>
+                <button id="deleteBtn" type="submit" class="modal-button confirm" onclick="confirmDelete()">
+                    <span id="delete-btn-text" class="btn-text">Delete</span>
+                    <span id="deleteSpinner" class="spinner" style="display:none;"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -406,10 +409,21 @@
         async function confirmDelete() {
             if (!expenseToDelete) return;
             try {
+                const spinner = document.getElementById("deleteSpinner");
+                const deleteBtnText = document.getElementById("delete-btn-text");
+                const deleteBtn = document.getElementById("deleteBtn");
+                deleteBtn.disabled = true;
+                deleteBtnText.style.opacity = 0;
+                spinner.style.display = "inline-block";
+
                 const response = await deleteExpense(expenseToDelete);
                 if (!response) {
                     throw new Error('Failed to delete expense from database');
                 }
+                spinner.style.display = "none";
+                deleteBtnText.style.opacity = 1;
+                deleteBtn.disabled = false;
+
                 await initialize();
                 closeDeleteModal();
             } catch (error) {
