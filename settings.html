@@ -487,6 +487,7 @@
                 let cached = localStorage.getItem("allCategories")
 
                 if (cached) {
+                    console.log("Using cached categories");
                     categories = JSON.parse(cached).categories || [];
                     currentCurrency = configResponse.currency;
                     currentStartDate = 1;
@@ -496,6 +497,7 @@
                     populateCurrencySelect();
 
                 }
+                console.log("Fetching categories from server");
                 const categoriesResponse = await getCategories()
                 categories = categoriesResponse.categories || [];
                 currentCurrency = configResponse.currency;
