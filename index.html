@@ -637,6 +637,9 @@
 
         document.getElementById('toggleExpenseFormBtn').addEventListener('click', function () {
             document.getElementById('deleteModal').classList.add('active');
+            const input = document.getElementById("name");
+            input.focus();
+
         });
 
         document.getElementById('expenseForm').addEventListener('submit', async (e) => {
