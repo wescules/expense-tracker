@@ -64,15 +64,12 @@ async function getAllCategories() {
 async function updateCategories(updatedFields) {
     const categoryDocId = "Myg158nkJL86cI1rMr4J" // firestore has only 1 doc in this collection
     const categoryRef = doc(db, CATEGORY_COLLECTION, categoryDocId);
-    console.log('Updating categories with fields:', updatedFields);
     try{
         await updateDoc(categoryRef, {
             ...updatedFields, // Spread the updated fields
             updatedAt: Timestamp.now() // Always update the 'updatedAt' timestamp
         });
-        console.log(updatedFields)
         localStorage.setItem('allCategories', JSON.stringify(updatedFields));
-        console.log("Document successfully updated!");
         return true;
     } catch (error) {
         console.error("Error updating document: ", error);
@@ -173,7 +170,6 @@ async function addExpense(formData) {
             currency: formData.currency,
             user: username
         });
-        console.log("Document written with ID: ", docRef.id);
         return docRef.id;
     } catch (e) {
         console.error("Error adding document: ", e);

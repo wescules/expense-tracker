@@ -317,8 +317,9 @@ header {
   animation: spin 1s linear infinite;
   display: inline-block;
   position: relative;
-  right: 27px;
+  right: 18px;
   top: 50%;
+  bottom: -10px;
   transform: translateY(-50%);
 }
 

@@ -88,8 +88,17 @@
 
     <div id="deleteModal" class="modal">
         <div class="modal-content">
-            <h3>Add Expense</h3>
+            
             <div id="addExpenseContainer">
+                
+                <div class="row" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="" onclick="closeAddExpenseModal()">✖</div>
+                    <h4>Add Expense</h4>
+                    <button id="saveBtn" type="submit" class="modal-button confirm">
+                        <span id="save-btn-text" class="btn-text">Save</span>
+                        <span id="saveSpinner" class="spinner" style="display:none;"></span>
+                    </button>
+                    </div>
             <div class="form-container">
                 <form id="expenseForm" class="expense-form">
                     <div class="form-group">
@@ -111,16 +120,6 @@
 
                     <div class="form-group">
                         <select id="category" required aria-placeholder="Category">
-                            <option value="Food">Food</option>
-                            <option value="Groceries">Groceries</option>
-                            <option value="Travel">Travel</option>
-                            <option value="Rent">Rent</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Healthcare">Healthcare</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Miscellaneous">Miscellaneous</option>
-                            <option value="Income">Income</option>
                         </select>
                     </div>
 
@@ -134,22 +133,6 @@
                             const formattedDate = `${year}-${month}-${day}`;
                             document.getElementById('date').value = formattedDate;
                         </script>
-                    </div>
-
-                    <div class="form-group">
-                        <div id="tags-input-container" class="tags-input-container">
-                            <div id="selected-tags" class="selected-tags"></div>
-                            <input type="text" id="tags-input" placeholder=" Tags (optional)">
-                        </div>
-                        <div id="tags-dropdown" class="tags-dropdown"></div>
-                    </div>
-
-                    <div class="modal-buttons">
-                        <button class="modal-button" onclick="closeAddExpenseModal()">Cancel</button>
-                        <button id="saveBtn" type="submit" class="modal-button confirm">
-                            <span id="save-btn-text" class="btn-text">Submit</span>
-                            <span id="saveSpinner" class="spinner" style="display:none;"></span>
-                        </button>
                     </div>
 
                 </form>
@@ -171,15 +154,12 @@
         let allExpenses = [];
         let disabledCategories = new Set();
         let categoryColors = {};
-        let allTags = new Set();
-        let selectedTags = new Set();
 
         function createTable(expenses) {
             if (!expenses || expenses.length === 0) {
                 const message = 'No expenses recorded for this month';
                 return `<div class="no-data">${message}</div>`;
             }
-            const hasTags = expenses.some(exp => exp.tags && exp.tags.length > 0);
             // Aggregate by day
             const aggregated = expenses.reduce((acc, expense) => {
                 const date = new Date(expense.date).toISOString().split('T')[0]; // "YYYY-MM-DD"
@@ -451,30 +431,16 @@
                 const cachedExpenses = localStorage.getItem('allExpenses');
                 if (cachedExpenses) {
                     allExpenses = JSON.parse(cachedExpenses);
-                    allTags.clear();
-                    allExpenses.forEach(exp => {
-                        if (exp.tags) {
-                            exp.tags.forEach(tag => allTags.add(tag));
-                        }
-                    });
                     const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
                     assignCategoryColors(uniqueCategories);
                     updateMonthDisplay();
                     updateChartAndLegend();
                     updateTable();
-                    setupTagInput();
                 }
                 const [data, categories] = await Promise.all([getAllExpenses(), getAllCategories()]);
                 if (!data) throw new Error('Failed to fetch expenses');
                 allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses
                     : []);
-
-                allTags.clear();
-                allExpenses.forEach(exp => {
-                    if (exp.tags) {
-                        exp.tags.forEach(tag => allTags.add(tag));
-                    }
-                });
 
                 const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
                 populateCategoryDropDown(categories);
@@ -482,7 +448,6 @@
                 updateMonthDisplay();
                 updateChartAndLegend();
                 updateTable();
-                setupTagInput();
                 //drawExpenseChart();
             } catch (error) {
                 console.error('Failed to initialize dashboard:', error);
@@ -566,94 +531,9 @@
 
         }
         
-
-
         Chart.defaults.color = '#b3b3b3';
         Chart.defaults.borderColor = '#606060';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-
-        function setupTagInput() {
-            const container = document.getElementById('tags-input-container');
-            const input = document.getElementById('tags-input');
-            const dropdown = document.getElementById('tags-dropdown');
-            const selectedContainer = document.getElementById('selected-tags');
-            const formGroup = container.parentElement;
-
-            const addTag = (tag) => {
-                tag = tag.trim();
-                if (tag && !selectedTags.has(tag)) {
-                    selectedTags.add(tag);
-                    const pill = document.createElement('div');
-                    pill.className = 'tag-pill';
-                    pill.textContent = tag;
-                    const removeBtn = document.createElement('span');
-                    removeBtn.className = 'remove-tag';
-                    removeBtn.textContent = '×';
-                    removeBtn.onclick = () => {
-                        selectedTags.delete(tag);
-                        pill.remove();
-                    };
-                    pill.appendChild(removeBtn);
-                    selectedContainer.appendChild(pill);
-                }
-                input.value = '';
-                dropdown.style.display = 'none';
-            };
-
-            input.addEventListener('focus', () => {
-                dropdown.innerHTML = '';
-                const availableTags = [...allTags].filter(tag => !selectedTags.has(tag));
-                if (availableTags.length > 0) {
-                    availableTags.forEach(tag => {
-                        const item = document.createElement('div');
-                        item.textContent = tag;
-                        item.onclick = () => addTag(tag);
-                        dropdown.appendChild(item);
-                    });
-                    dropdown.style.display = 'block';
-                }
-            });
-
-            input.addEventListener('input', () => {
-                const value = input.value.trim().toLowerCase();
-                dropdown.innerHTML = '';
-                const filteredTags = [...allTags].filter(tag => tag.toLowerCase().includes(value) &&
-                    !selectedTags.has(tag));
-
-                if (value && ![...allTags].map(t => t.toLowerCase()).includes(value)) {
-                    const newItem = document.createElement('div');
-                    newItem.textContent = `+ Create "${input.value.trim()}"`;
-                    newItem.className = 'new-tag';
-                    newItem.onclick = () => addTag(input.value.trim());
-                    dropdown.appendChild(newItem);
-                }
-
-                filteredTags.forEach(tag => {
-                    const item = document.createElement('div');
-                    item.textContent = tag;
-                    item.onclick = () => addTag(tag);
-                    dropdown.appendChild(item);
-                });
-
-                dropdown.style.display = dropdown.children.length > 0 ? 'block' : 'none';
-            });
-
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (input.value.trim()) {
-                        addTag(input.value.trim());
-                    }
-                }
-            });
-
-            container.addEventListener('click', () => input.focus());
-            document.addEventListener('click', (e) => {
-                if (!formGroup.contains(e.target)) {
-                    dropdown.style.display = 'none';
-                }
-            });
-        }
 
         document.getElementById('prevMonth').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
@@ -685,21 +565,30 @@
             }
         });
 
-        document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+        document.getElementById('saveBtn').addEventListener('click', async (e) => {
             e.preventDefault();
-            const isGain = false; //document.getElementById('reportGain').checked;
-            let amount = parseFloat(document.getElementById('amount').value);
-            if (!isGain) {
-                amount *= -1;
+            const form = document.getElementById('expenseForm');
+            form.reportValidity();
+            if (!form.checkValidity()) {
+                form.reportValidity();
+            }else{
+                await submitExpenseForm(e);
             }
+        });
+
+        async function submitExpenseForm(event) {
+            event.preventDefault();
+            let amount = parseFloat(document.getElementById('amount').value);
+
             const formData = {
                 name: document.getElementById('name').value,
                 category: document.getElementById('category').value,
-                amount: amount,
+                amount: -amount,
                 date: getISODateWithLocalTime(document.getElementById('date').value),
-                tags: Array.from(selectedTags),
+                tags: [],
                 currency: document.getElementById('currency').value
             };
+
             console.log('Form Data to submit:', formData);
             try {
                 const spinner = document.getElementById("saveSpinner");
@@ -719,9 +608,7 @@
                     messageDiv.textContent = 'Expense added successfully!';
                     messageDiv.className = 'form-message success';
                     document.getElementById('expenseForm').reset();
-                    document.getElementById('selected-tags').innerHTML = '';
                     document.getElementById('deleteModal').classList.remove('active');
-                    selectedTags.clear();
                     await initialize();
                     const today = new Date();
                     const year = today.getFullYear();
@@ -743,7 +630,7 @@
                 messageDiv.textContent = 'Error: Failed to add expense';
                 messageDiv.className = 'form-message error';
             }
-        });
+        }
 
         function closeAddExpenseModal() {
             document.getElementById('deleteModal').classList.remove('active');
