@@ -3,17 +3,7 @@
         let allExpenses = [];
         let expensesForTable = [];
         let startDate = 1;
-        let allTags = new Set();
-        let selectedTags = new Set();
         let categoryColors = {}
-
-        function assignCategoryColors(categories) {
-            categories.forEach((category, index) => {
-                if (!categoryColors[category]) {
-                    categoryColors[category] = colorPalette[index % colorPalette.length];
-                }
-            });
-        }
 
         function createTable(expenses) {
             if (!expenses || expenses.length === 0) {
@@ -22,13 +12,11 @@
                                 'No expenses recorded for this month';
                 return `<div class="no-data">${message}</div>`;
             }
-            const hasTags = expenses.some(exp => exp.tags && exp.tags.length > 0);
             return `
                 <table class="expense-table">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            ${hasTags ? '<th class="tags-column">Tags</th>' : ''}
                             <th>Date</th>
                             <th>Amount</th>
                             <th></th>
@@ -42,7 +30,6 @@
                                     <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
                                 </td>
                                 <td >${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td>
-                                ${hasTags ? `<td class="tags-column">${(expense.tags || []).map(escapeHTML).join(', ')}</td>` : ''}
                                 <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
                                 
                                 <td>
@@ -75,38 +62,14 @@
         function editExpenseByIndex(index) {
             const expense = expensesForTable[index];
             if (expense) {
-                editExpense(expense.id, expense.name, expense.category, expense.amount, (expense.tags || []), expense.date);
+                editExpense(expense.id, expense.name, expense.category, expense.amount, expense.date);
             }
         }
 
-        function renderSelectedTags(tags) {
-            const selectedContainer = document.getElementById('selected-tags');
-            selectedContainer.innerHTML = '';
-            selectedTags.clear();
-            (tags || []).forEach(tag => {
-                selectedTags.add(tag);
-                const pill = document.createElement('div');
-                pill.className = 'tag-pill';
-                pill.textContent = tag;
-                const removeBtn = document.createElement('span');
-                removeBtn.className = 'remove-tag';
-                removeBtn.textContent = '×';
-                removeBtn.onclick = () => {
-                    selectedTags.delete(tag);
-                    pill.remove();
-                };
-                pill.appendChild(removeBtn);
-                selectedContainer.appendChild(pill);
-            });
-        }
-
-        function editExpense(id, name, category, amount, tags, date) {
-            const isGain = amount > 0;
+        function editExpense(id, name, category, amount, date) {
             document.getElementById('name').value = name;
             document.getElementById('category').value = category;
             document.getElementById('amount').value = Math.abs(amount);
-            document.getElementById('reportGain').checked = isGain;
-            renderSelectedTags(tags);
             
             const localDate = new Date(date);
             const year = localDate.getFullYear();
@@ -120,79 +83,6 @@
             submitButton.textContent = 'Update Expense';
             
             form.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function setupTagInput() {
-            const container = document.getElementById('tags-input-container');
-            const input = document.getElementById('tags-input');
-            const dropdown = document.getElementById('tags-dropdown');
-            const formGroup = container.parentElement;
-
-            const addTag = (tag) => {
-                tag = tag.trim();
-                if (tag && !selectedTags.has(tag)) {
-                    selectedTags.add(tag);
-                    renderSelectedTags(Array.from(selectedTags));
-                }
-                input.value = '';
-                dropdown.style.display = 'none';
-            };
-
-            input.addEventListener('focus', () => {
-                dropdown.innerHTML = '';
-                const availableTags = [...allTags].filter(tag => !selectedTags.has(tag));
-                if (availableTags.length > 0) {
-                    availableTags.forEach(tag => {
-                        const item = document.createElement('div');
-                        item.textContent = tag;
-                        item.onclick = () => addTag(tag);
-                        dropdown.appendChild(item);
-                    });
-                    dropdown.style.display = 'block';
-                }
-            });
-
-            input.addEventListener('input', () => {
-                const value = input.value.trim().toLowerCase();
-                dropdown.innerHTML = '';
-                const filteredTags = [...allTags].filter(tag => tag.toLowerCase().includes(value) && !selectedTags.has(tag));
-                
-                if(value && ![...allTags].map(t => t.toLowerCase()).includes(value)) {
-                    const newItem = document.createElement('div');
-                    newItem.textContent = `+ Create "${input.value.trim()}"`;
-                    newItem.className = 'new-tag';
-                    newItem.onclick = () => addTag(input.value.trim());
-                    dropdown.appendChild(newItem);
-                }
-
-                if (filteredTags.length > 0) {
-                    filteredTags.forEach(tag => {
-                        const item = document.createElement('div');
-                        item.textContent = tag;
-                        item.onclick = () => addTag(tag);
-                        dropdown.appendChild(item);
-                    });
-                }
-                
-                dropdown.style.display = 'block';
-                if (dropdown.children.length === 0) dropdown.style.display = 'none';
-            });
-
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (input.value.trim()) {
-                        addTag(input.value.trim());
-                    }
-                }
-            });
-
-            container.addEventListener('click', () => input.focus());
-            document.addEventListener('click', (e) => {
-                if (!formGroup.contains(e.target)) {
-                    dropdown.style.display = 'none';
-                }
-            });
         }
 
         async function getCategories() {
@@ -212,32 +102,19 @@
                 const cached = localStorage.getItem('allExpenses');
                 if (cached) {
                     allExpenses = JSON.parse(cached);
-                    allTags.clear();
-                    allExpenses.forEach(exp => {
-                        if (exp.tags) {
-                            exp.tags.forEach(tag => allTags.add(tag));
-                        }
-                    });
+                    const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
+                    assignCategoryColors(uniqueCategories);
                     updateMonthDisplay();
                     updateTable();
-                    setupTagInput();
                 }
 
                 const data = await getAllExpenses();
                 allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
                 
-                allTags.clear();
-                allExpenses.forEach(exp => {
-                    if (exp.tags) {
-                        exp.tags.forEach(tag => allTags.add(tag));
-                    }
-                });
-
                 const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
                 assignCategoryColors(uniqueCategories);
                 updateMonthDisplay();
                 updateTable();
-                setupTagInput();
             } catch (error) {
                 console.error('Failed to initialize table:', error);
                 document.getElementById('tableContainer').innerHTML = 
@@ -316,18 +193,13 @@
             e.preventDefault();
             const form = e.target;
             const editId = form.dataset.editId;
-            const isGain = document.getElementById('reportGain').checked;
             let amount = parseFloat(document.getElementById('amount').value);
-            if (!isGain) {
-                amount *= -1;
-            }
 
             const formData = {
                 name: document.getElementById('name').value,
                 category: document.getElementById('category').value,
-                amount: amount,
+                amount: -amount,
                 date: getISODateWithLocalTime(document.getElementById('date').value),
-                tags: Array.from(selectedTags)
             };
             try {
                 const response = await updateExpense(editId, formData);
@@ -336,8 +208,6 @@
                     messageDiv.textContent = editId ? 'Expense updated successfully!' : 'Expense added successfully!';
                     messageDiv.className = 'form-message success';
                     form.reset();
-                    document.getElementById('selected-tags').innerHTML = '';
-                    selectedTags.clear();
                     delete form.dataset.editId;
                     form.querySelector('button[type="submit"]').textContent = 'Add Expense';
                     await initialize();

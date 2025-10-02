@@ -67,7 +67,6 @@ async function updateCategories(updatedFields) {
     try{
         await updateDoc(categoryRef, {
             ...updatedFields, // Spread the updated fields
-            updatedAt: Timestamp.now() // Always update the 'updatedAt' timestamp
         });
         localStorage.setItem('allCategories', JSON.stringify(updatedFields));
         return true;
@@ -91,7 +90,6 @@ async function updateUserConfig() {
             const userDoc = querySnapshot.docs[0];
             await updateDoc(userDoc.ref, {
                 ...config,
-                updatedAt: Timestamp.now()
             });
             console.log("Document successfully updated!");
             return true;
@@ -166,7 +164,6 @@ async function addExpense(formData) {
             amount: parseFloat(formData.amount),
             date: formData.date,
             category: formData.category,
-            tags: formData.tags,
             currency: formData.currency,
             user: username
         });
@@ -183,7 +180,6 @@ async function updateExpense(documentId, updatedFields) {
     try {
         await updateDoc(expenseRef, {
             ...updatedFields, // Spread the updated fields
-            updatedAt: Timestamp.now() // Always update the 'updatedAt' timestamp
         });
         console.log("Document successfully updated!");
         return true;

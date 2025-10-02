@@ -76,6 +76,14 @@ function convertCurrency(amount, from, to) {
   return converted;
 }
 
+function assignCategoryColors(categories) {
+    categories.forEach((category, index) => {
+        if (!categoryColors[category]) {
+            categoryColors[category] = colorPalette[index % colorPalette.length];
+        }
+    });
+}
+
 function formatCurrency(amount) {
     const behavior = currencyBehaviors[currentCurrency] || { symbol: '$', useComma: false, useDecimals: true };
     const isNegative = amount < 0;

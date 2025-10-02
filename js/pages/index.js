@@ -83,14 +83,6 @@
             tableContainer.innerHTML = createTable(expensesForTable);
         }
 
-        function assignCategoryColors(categories) {
-            categories.forEach((category, index) => {
-                if (!categoryColors[category]) {
-                    categoryColors[category] = colorPalette[index % colorPalette.length];
-                }
-            });
-        }
-
         function calculateCategoryBreakdown(expenses) {
             const categoryTotals = {};
             let totalAmount = 0;
@@ -495,7 +487,6 @@
                 category: document.getElementById('category').value,
                 amount: -amount,
                 date: getISODateWithLocalTime(document.getElementById('date').value),
-                tags: [],
                 currency: document.getElementById('currency').value
             };
 

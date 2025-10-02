@@ -304,9 +304,7 @@
                     currentStartDate = 1;
                     allTags.clear();
                     (expensesResponse || []).forEach(exp => (exp.tags || []).forEach(tag => allTags.add(tag)));
-                    renderCategories();
-                    populateCurrencySelect();
-
+                    await Promise.all([renderCategories(), populateCurrencySelect()]);
                 }
                 const categoriesResponse = await getAllCategories()
                 categories = categoriesResponse.categories || [];
@@ -315,8 +313,7 @@
                 allTags.clear();
                 (expensesResponse || []).forEach(exp => (exp.tags || []).forEach(tag => allTags.add(tag)));
 
-                renderCategories();
-                populateCurrencySelect();
+                await Promise.all([renderCategories(), populateCurrencySelect()]);
             } catch (error) {
                 console.error('Failed to initialize settings:', error);
                 showMessage('categoriesMessage', 'Failed to load settings', false);
