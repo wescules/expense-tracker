@@ -116,7 +116,7 @@
                   {
                     text: function (date, value, dayjsDate) {
                       return (
-                        (value ? "$" + value.toFixed(2) : "No data") +
+                        (value ? currencyBehaviors[currentCurrency].symbol + value.toFixed(2) : "No data") +
                         " on " +
                         dayjsDate.format("LL")
                       );
