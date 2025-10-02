@@ -1,11 +1,132 @@
         let currentCurrency = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo
+        const theme = localStorage.getItem("theme") || 'dark';
         let startDate = 1;
-        let pieChart = null;
-        let lineChart = null;
+        let chart = null;
+        let currentlySelectedChart = 'pie';
         let currentDate = new Date();
         let allExpenses = [];
         let disabledCategories = new Set();
         let categoryColors = {};
+        let categoryData = [];
+
+        function renderChartType(type, forceRender = false) {
+            const calendarDiv = document.getElementById('cal-heatmap');
+            const chartCanvas = document.getElementById('chartCanvas');
+            const pieButton = document.getElementById("pie");
+            const barButton = document.getElementById("bar");
+            const calendarButton = document.getElementById("calendar");
+
+            if (type === 'pie' && (currentlySelectedChart !== 'pie' || forceRender)) {
+                calendarDiv.innerHTML = ''; // Clear previous calendar view
+                chartCanvas.style.display = 'block';
+                chartCanvas.style.visibility = 'visible';
+
+                pieButton.classList.add("active")
+                barButton.classList.remove("active")
+                calendarButton.classList.remove("active")
+                createPieChart();
+            } else if (type === 'bar' && (currentlySelectedChart !== 'bar' || forceRender)) {
+                calendarDiv.innerHTML = ''; // Clear previous calendar view
+                chartCanvas.style.display = 'block';
+                chartCanvas.style.visibility = 'visible'
+
+                pieButton.classList.remove("active")
+                barButton.classList.add("active")
+                calendarButton.classList.remove("active")
+                drawExpenseChart();
+            } else if (type === 'calendar' && (currentlySelectedChart !== 'calendar' || forceRender)) {
+                calendarDiv.innerHTML = ''; // Clear previous calendar view
+                pieButton.classList.remove("active")
+                barButton.classList.remove("active")
+                calendarButton.classList.add("active")
+                createCalendarView();
+            }
+        }
+
+        function getPriceRangeForCalendar(){
+            if (currentCurrency == 'usd'){
+                return [0, 500]
+            }
+            else if (currentCurrency === 'cny'){
+                return [0, 3500]
+            }else if (currentCurrency === 'inr'){
+                return [0, 44000]
+            }
+        }
+
+        function createCalendarView() {
+            if (chart) {
+                chart.destroy();
+            }
+            currentlySelectedChart = 'calendar';
+            document.getElementById('chartCanvas').style.display = 'none';
+            document.getElementById('chartCanvas').style.visibility = 'hidden';
+
+            let spendingData = [];
+            allExpenses.forEach((exp) => {
+                const day = exp.date.split("T")[0];
+                const amount = convertCurrency(
+                Math.abs(exp.amount),
+                exp.currency,
+                currentCurrency
+                );
+                spendingData.push({ date: day, value: amount });
+            });
+            
+
+            const cal = new CalHeatmap();
+            cal.paint(
+              {
+                theme: theme,
+                itemSelector: "#cal-heatmap",
+                range: 1,
+                date: { start: currentDate }, // October = month index 9
+                domain: {
+                  type: "month",
+                  padding: [10, 10, 10, 10],
+                  label: { text: "" },
+                },
+                subDomain: {
+                  type: "xDay",
+                  radius: 2,
+                  width: 30,
+                  height: 30,
+                  label: "D",
+                },
+                data: {
+                  source: spendingData,
+                  type: "json",
+                  x: "date",
+                  y: "value",
+                },
+                scale: {
+                  color: {
+                    range: ['green', 'red'],
+                    type: "linear",
+                    interpolate: "hsl",
+                    domain: getPriceRangeForCalendar(),
+                  },
+                },
+                legend: [50, 100, 150, 200, 250],
+                tooltip: false,
+              },
+              [
+                [
+                  Tooltip,
+                  {
+                    text: function (date, value, dayjsDate) {
+                      return (
+                        (value ? "$" + value.toFixed(2) : "No data") +
+                        " on " +
+                        dayjsDate.format("LL")
+                      );
+                    },
+                  },
+                ],
+              ]
+            );
+
+        }
 
         function createTable(expenses) {
             if (!expenses || expenses.length === 0) {
@@ -31,41 +152,41 @@
                         </tr>
                     </thead>
                     <tbody>
-                       ${Object.keys(aggregated)
-  .sort()
-  .reverse()
-  .map(date => {
-    // Optional: display the date as a header
-    const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(date).slice(0, 6).replace(',', '')}</td>`;
+                    ${Object.keys(aggregated)
+                        .sort()
+                        .reverse()
+                        .map(date => {
+                            // Optional: display the date as a header
+                            const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(date).slice(0, 6).replace(',', '')}</td>`;
 
-    // Map over each expense for this date
-    const rows = aggregated[date]
-      .map(expense => `
-        <tr>
-          <td style="text-align: center">
-            ${expense.user === 'wescules'
-              ? `<img src="img/wes.webp" class="circle-img">`
-              : `<img src="img/abbie.webp" class="circle-img">`
-            }
-          </td>
-          <!-- <td>${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td> -->
-          <td>
-            <div>${escapeHTML(expense.name)}</div>
-            <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
-          </td>
-          <td class="amount" style="color: #e74c3c; text-align: center;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
-          <td>                
-                <button class="delete-button" onclick="handleDeleteClick(event, '${expense.id}')">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            </td>
-        </tr>
-      `)
-      .join(''); // join all rows for this date
+                            // Map over each expense for this date
+                            const rows = aggregated[date]
+                            .map(expense => `
+                                <tr>
+                                <td style="text-align: center">
+                                    ${expense.user === 'wescules'
+                                    ? `<img src="img/wes.webp" class="circle-img">`
+                                    : `<img src="img/abbie.webp" class="circle-img">`
+                                    }
+                                </td>
+                                <!-- <td>${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td> -->
+                                <td>
+                                    <div>${escapeHTML(expense.name)}</div>
+                                    <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
+                                </td>
+                                <td class="amount" style="color: #e74c3c; text-align: center;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
+                                <td>                
+                                        <button class="delete-button" onclick="handleDeleteClick(event, '${expense.id}')">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `)
+                            .join(''); // join all rows for this date
 
-    return dateHeader + rows; // combine header + rows
-  })
-  .join('') // join all dates together
+                            return dateHeader + rows; // combine header + rows
+                        })
+                        .join('') // join all dates together
 }
 
                     </tbody>
@@ -86,10 +207,9 @@
         function calculateCategoryBreakdown(expenses) {
             const categoryTotals = {};
             let totalAmount = 0;
-            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
             expenses.forEach(exp => {
                 if (exp.amount < 0 && !disabledCategories.has(exp.category)) {
-                    const amount = convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo);
+                    const amount = convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency);
                     categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + amount; totalAmount += amount;
                 }
             });
@@ -108,9 +228,8 @@
         }
 
         function calculateExpenses(expenses) {
-            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
             return expenses
-                .filter(exp => exp.amount < 0).reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo), 0);
+                .filter(exp => exp.amount < 0).reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
         }
 
         function updateChartAndLegend() {
@@ -119,15 +238,25 @@
             const legendBox = document.getElementById('customLegend');
             const cashflowSection = document.getElementById('cashflow-section');
             const noDataMessage = document.getElementById('noDataMessage');
-            const hasExpenses = monthExpenses.some(e => e.amount < 0); if (!hasExpenses) {
-                if (pieChart) {
-                    pieChart.destroy(); pieChart = null;
-                } chartBox.style.display = 'none'; legendBox.style.display = 'none';
-                cashflowSection.style.display = 'none'; noDataMessage.style.display = 'block';
+            const hasExpenses = monthExpenses.some(e => e.amount < 0);
+            if (!hasExpenses) {
+                if (chart) {
+                    chart.destroy();
+                    chart = null;
+                } 
+                chartBox.style.display = 'none';
+                legendBox.style.display = 'none';
+                cashflowSection.style.display = 'none';
+                noDataMessage.style.display = 'block';
             } else {
-                chartBox.style.display = 'flex'; legendBox.style.display = 'flex'; cashflowSection.style.display = 'flex';
-                noDataMessage.style.display = 'none'; const categoryData = calculateCategoryBreakdown(monthExpenses);
-                updateCashflow(monthExpenses); createPieChart(categoryData); updateLegend(categoryData);
+                chartBox.style.display = 'flex';
+                legendBox.style.display = 'flex';
+                cashflowSection.style.display = 'flex';
+                noDataMessage.style.display = 'none';
+                categoryData = calculateCategoryBreakdown(monthExpenses);
+                updateCashflow(monthExpenses);
+                renderChartType(currentlySelectedChart, true);
+                updateLegend();
             }
         }
 
@@ -157,9 +286,13 @@
             }
         }
 
-        function createPieChart(categoryData) {
-            if (pieChart) pieChart.destroy();
-            pieChart = new Chart('categoryPieChart', {
+        function createPieChart() {
+            if (chart) {
+                chart.destroy();
+            }
+            currentlySelectedChart = 'pie';
+
+            chart = new Chart('chartCanvas', {
                 type: 'doughnut',
                 data: {
                     labels: categoryData.map(c => c.category),
@@ -192,7 +325,7 @@
             });
         }
 
-        function updateLegend(categoryData) {
+        function updateLegend() {
             const legendContainer = document.getElementById('customLegend');
             legendContainer.innerHTML = '';
             const monthExpenses = getMonthExpenses(allExpenses);
@@ -225,10 +358,10 @@
                 legendContainer.appendChild(item);
             });
 
-            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
+            
             const activeTotalExpenses = monthExpenses
                 .filter(exp => exp.amount < 0 && !disabledCategories.has(exp.category)).reduce((sum, exp) => sum +
-                    convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo), 0);
+                    convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
 
             const totalsHtml = `
                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
@@ -270,6 +403,9 @@
         }
 
         async function initialize() {
+            document.getElementById("pie").classList.add("active")
+            document.getElementById("bar").classList.remove("active")
+            document.getElementById("calendar").classList.remove("active")
             
             try {
                 let cachedCategories = localStorage.getItem("allCategories")
@@ -297,73 +433,90 @@
                 updateMonthDisplay();
                 updateChartAndLegend();
                 updateTable();
-                //drawExpenseChart();
             } catch (error) {
                 console.error('Failed to initialize dashboard:', error);
             }
         }
 
         function drawExpenseChart() {
-            if (lineChart) lineChart.destroy();
-            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if (chart) {
+                chart.destroy();
+            }
+            currentlySelectedChart = 'bar';
+            const ctx = document.getElementById("chartCanvas").getContext("2d");
             if (!allExpenses || allExpenses.length === 0) {
                 ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                 return;
-            }
-            const year1 = currentDate.getFullYear();
-            const month1 = currentDate.getMonth();
-            const allDays = getDaysInMonth(year1, month1);
+          }
+          const year1 = currentDate.getFullYear();
+          const month1 = currentDate.getMonth();
+          const allDays = getDaysInMonth(year1, month1);
 
-            // Step 2: Aggregate expenses per day
-            const expensesByDay = {};
-            const convertCurrencyTo = JSON.parse(localStorage.getItem('userConfig')).convertCurrencyTo
-            allExpenses.forEach(exp => {
-                const day = exp.date.split('T')[0];
-                const amount = convertCurrency(Math.abs(exp.amount), exp.currency, convertCurrencyTo);
-                expensesByDay[day] = (expensesByDay[day] || 0) + amount;
-            });
+          // Step 2: Aggregate expenses per day
+          const expensesByDay = {};
+          const convertCurrencyTo = JSON.parse(
+            localStorage.getItem("userConfig")
+          ).convertCurrencyTo;
+          allExpenses.forEach((exp) => {
+            const day = exp.date.split("T")[0];
+            const amount = convertCurrency(
+              Math.abs(exp.amount),
+              exp.currency,
+              convertCurrencyTo
+            );
+            expensesByDay[day] = (expensesByDay[day] || 0) + amount;
+          });
 
-            if (Object.keys(expensesByDay).length === 0) {
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                return;
-            }
+          if (Object.keys(expensesByDay).length === 0) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            return;
+          }
 
-            // Step 3: Prepare dataset with zeros for missing days
-            const data = allDays.map(day => expensesByDay[day] || 0);
+          // Step 3: Prepare dataset with zeros for missing days
+          const data = allDays.map((day) => expensesByDay[day] || 0);
 
-            // Step 4: Chart.js
-            lineChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: allDays,
-                    datasets: [{
-                        label: 'Daily Expenses',
-                        data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)'
-                    }]
+          // Step 4: Chart.js
+          chart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: allDays,
+              datasets: [
+                {
+                  label: "Daily Expenses",
+                  data: data,
+                  backgroundColor: "#8338EC",
                 },
-                options: {
-                    scales: {
-                        x: { type: 'time',
-                        time: {
-                            unit: 'day',                 // your data is daily
-                            tooltipFormat: 'MMM d',      // tooltip shows e.g., Oct 1
-                            displayFormats: {
-                                day: 'MMM d'             // x-axis label shows e.g., Oct 1
-                            }
-                        },
-            grid: {
-                drawOnChartArea: false,  // hides vertical grid lines
-                drawTicks: true           // optional, keeps tick marks
+              ],
             },
-                        ticks: {
-                            autoSkip: true,
-                            maxTicksLimit: 10
-                        } }, // show all dates
-                        y: { beginAtZero: true }
+            options: {
+                plugins: {
+                    title: {
+                        display: false
                     }
-                }
-            });
+                },
+              scales: {
+                x: {
+                  type: "time",
+                  time: {
+                    unit: "day", // your data is daily
+                    tooltipFormat: "MMM d", // tooltip shows e.g., Oct 1
+                    displayFormats: {
+                      day: "MMM d", // x-axis label shows e.g., Oct 1
+                    },
+                  },
+                  grid: {
+                    drawOnChartArea: false, // hides vertical grid lines
+                    drawTicks: true, // optional, keeps tick marks
+                  },
+                  ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 5,
+                  },
+                }, // show all dates
+                y: { beginAtZero: true },
+              },
+            },
+          });
         }
         // Step 1: Generate all dates of the month
         function getDaysInMonth(year, month) {
@@ -389,7 +542,6 @@
             updateMonthDisplay();
             updateTable();
             updateChartAndLegend();
-            //drawExpenseChart();
         });
 
         document.getElementById('nextMonth').addEventListener('click', () => {
@@ -397,7 +549,6 @@
             updateMonthDisplay();
             updateTable();
             updateChartAndLegend();
-            //drawExpenseChart();
         });
 
         document.getElementById('toggleExpenseFormBtn').addEventListener('click', function () {

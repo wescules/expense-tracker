@@ -26,6 +26,14 @@
     </script>
     <title>ExpenseOwl Dashboard</title>
     <script src="js/chart.min.js"></script>
+
+    <!-- Just for Calendar Chart -->
+    <script src="https://d3js.org/d3.v7.min.js" defer></script>
+    <script src="https://unpkg.com/cal-heatmap/dist/cal-heatmap.min.js" defer></script>
+    <link rel="stylesheet" href="https://unpkg.com/cal-heatmap/dist/cal-heatmap.css">
+    <script src="https://unpkg.com/@popperjs/core@2" defer></script>
+    <script src="https://unpkg.com/cal-heatmap/dist/plugins/Tooltip.min.js" defer></script>
+
 </head>
 
 <body>
@@ -73,14 +81,19 @@
             </div>
         </div>
         <div class="chart-container">
+            <div class="chart-icons">
+                <i id="pie" class="fa-solid fa-chart-pie custom-chart" onclick="renderChartType('pie')" data-tooltip></i>
+                <i id="bar" class="fa-solid fa-chart-simple custom-chart" onclick="renderChartType('bar')" data-tooltip></i>
+                <i id="calendar" class="fa-solid fa-calendar-days custom-chart" onclick="renderChartType('calendar')" data-tooltip></i>
+            </div>
             <div id="noDataMessage" class="no-data" style="display: none; width: 100%;">No expenses recorded this month.</div>
             <div class="chart-box">
-                <canvas id="categoryPieChart"></canvas>
+                <canvas id="chartCanvas"></canvas>
+                <div id="cal-heatmap"></div>
             </div>
             <div class="legend-box" id="customLegend">
             </div>
         </div>
-        <!-- <canvas id="expenseChart" width="600" height="400"></canvas> -->
         <div id="tableContainer">
         </div>
     </div>
@@ -158,8 +171,8 @@
     <script src="js/categoryPicker.js"></script>
     <script src="js/pages/index.js"></script>
 
-<!-- <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
 
 </body>
 

@@ -209,6 +209,19 @@
     --fa: "\f061"
 }
 
+.fa-chart-simple{
+    --fa:"\e473"
+}
+
+.fa-calendar-days{
+    --fa:"\f073"
+}
+
+.fa-calendar-days.active,.fa-chart-simple.active,.fa-chart-pie.active {
+    color: #69afde;
+    transform: scale(1.2);        
+}
+
 @font-face {
     font-family: "Font Awesome 5 Brands";
     font-display: block;

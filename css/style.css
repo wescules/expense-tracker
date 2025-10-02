@@ -262,7 +262,7 @@ header {
     align-items: center;
 }
 
-.view-button {
+.view-button,.custom-chart {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border);
     color: var(--text-primary);
@@ -275,7 +275,7 @@ header {
     height: fit-content;
 }
 
-.view-button:hover {
+.view-button:hover,.custom-chart:hover {
     background-color: var(--accent);
 }
 
@@ -288,7 +288,8 @@ header {
     position: relative;
 }
 
-.view-button[data-tooltip]:hover::after {
+.view-button[data-tooltip]:hover::after,
+.custom-chart[data-tooltip]:hover::after {
     content: attr(data-tooltip);
     position: absolute;
     bottom: -30px;
@@ -385,6 +386,12 @@ header {
 .edit-button:hover {
     background-color: rgba(105, 175, 222, 0.1);
     color: var(--accent);
+}
+.chart-icons {
+    display: flex;
+    gap: 13px;
+    align-self: self-end;
+    padding: 10px;
 }
 
 .modal {
