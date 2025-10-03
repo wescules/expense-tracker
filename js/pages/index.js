@@ -134,6 +134,9 @@
                 return `<div class="no-data">${message}</div>`;
             }
             // Aggregate by day
+            if (disabledCategories.size !== 0){
+                expenses = expenses.filter(expense => disabledCategories.has(expense.category))
+            }
             const aggregated = expenses.reduce((acc, expense) => {
                 const date = new Date(expense.date).toISOString().split('T')[0]; // "YYYY-MM-DD"
                 if (!acc[date]) acc[date] = [];
@@ -195,8 +198,7 @@
         }
 
         function updateTable() {
-            const showAll = false; //document.getElementById('showAllToggle').checked;
-            document.querySelector('.month-navigation').style.display = showAll ? 'none' : 'flex';
+            document.querySelector('.month-navigation').style.display = 'flex';
 
             expensesForTable = getMonthExpenses(allExpenses);
             
@@ -208,7 +210,7 @@
             const categoryTotals = {};
             let totalAmount = 0;
             expenses.forEach(exp => {
-                if (exp.amount < 0 && !disabledCategories.has(exp.category)) {
+                if (exp.amount < 0) {
                     const amount = convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency);
                     categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + amount; totalAmount += amount;
                 }
@@ -382,7 +384,8 @@
             } else {
                 disabledCategories.add(category);
             }
-            updateChartAndLegend();
+            updateLegend();
+            updateTable();
         }
 
         function populateCategoryDropDown(categories) {
