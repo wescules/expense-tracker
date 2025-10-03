@@ -168,8 +168,8 @@
                                 <tr>
                                 <td style="text-align: center">
                                     ${expense.user === 'wescules'
-                                    ? `<img src="img/wes.webp" class="circle-img">`
-                                    : `<img src="img/abbie.webp" class="circle-img">`
+                                    ? `<img src="assets/wes.webp" class="circle-img">`
+                                    : `<img src="assets/abbie.webp" class="circle-img">`
                                     }
                                 </td>
                                 <!-- <td>${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td> -->
