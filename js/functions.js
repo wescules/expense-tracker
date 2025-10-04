@@ -6,7 +6,6 @@ const colorPalette = [
     '#96CEB4', // mint green
     '#FFBE0B', // yellow-orange
     '#FF006E', // hot pink
-    '#3A86FF', // royal blue
     '#FB5607', // orange
     '#38B000', // green
     '#9B5DE5', // violet
