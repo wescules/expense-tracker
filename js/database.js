@@ -161,10 +161,14 @@ async function getAllExpenses() {
 
 async function addTransaction(transactionType, description, amount, category, currency) {
     console.log("saving transaction")
+    const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
+    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
+    const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+
     return await addDoc(collection(db, TRANSACTION_COLLECTION), {
             name: description,
             amount: amount,
-            date: getISODateWithLocalTime(new Date().toISOString().split('T')[0]),
+            date: getISODateWithLocalTime(localDate),
             transactionType: transactionType,
             category: category,
             currency: currency,
