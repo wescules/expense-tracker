@@ -177,7 +177,7 @@
                                     <div>${escapeHTML(expense.name)}</div>
                                     <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
                                 </td>
-                                <td class="amount" style="color: #e74c3c; text-align: center;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
+                                <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
                                 <td>                
                                         <button class="delete-button" onclick="handleDeleteClick(event, '${expense.id}')">
                                             <i class="fa-solid fa-trash-can"></i>

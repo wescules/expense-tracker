@@ -30,7 +30,7 @@
                                     <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
                                 </td>
                                 <td style="white-space: nowrap;">${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td>
-                                <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
+                                <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
                                 
                                 <td>
                                     <button class="edit-button" onclick="editExpenseByIndex(${index})">

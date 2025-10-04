@@ -48,7 +48,7 @@
                                             ${transaction.transactionType.charAt(0).toUpperCase() + transaction.transactionType.slice(1)}d
                                         </lmao>${escapeHTML(transaction.name)}
                                     </td> 
-                                    <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(transaction.amount, transaction.currency)}</td>
+                                    <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap;">${formatCurrencyInTable(transaction.amount, transaction.currency)}</td>
                                     </tr>
                                 `)
                                 .join('');
