@@ -7,8 +7,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  Timestamp,
   getDocs,
+  getDoc,
   query,
   where,
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
@@ -28,6 +28,10 @@ const firebaseConfig = {
 const EXPENSES_COLLECTION = "expenses_collection";
 const CONFIG_COLLECTION = "user_config_collection";
 const CATEGORY_COLLECTION = "category_collection";
+const TRANSACTION_COLLECTION = 'transaction_collection'
+
+const username = localStorage.getItem('loggedInUsername');
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -79,7 +83,6 @@ async function updateCategories(updatedFields) {
 async function updateUserConfig() {
     try{
         const usersRef = collection(db, CONFIG_COLLECTION);
-        const username = localStorage.getItem('loggedInUsername');
         let config = JSON.parse(localStorage.getItem('userConfig'));
         const q = query(usersRef,
             where("username", "==", username),
@@ -156,17 +159,54 @@ async function getAllExpenses() {
   return []; // Return an empty array in case of error
 }
 
+async function addTransaction(transactionType, description, amount, category, currency) {
+    console.log("saving transaction")
+    return await addDoc(collection(db, TRANSACTION_COLLECTION), {
+            name: description,
+            amount: amount,
+            date: getISODateWithLocalTime(new Date().toISOString().split('T')[0]),
+            transactionType: transactionType,
+            category: category,
+            currency: currency,
+            user: username,
+        });
+}
+
+async function getAllTransactions() {
+  try {
+    const querySnapshot = await getDocs(collection(db, TRANSACTION_COLLECTION));
+    
+    let transactionList = [];
+    querySnapshot.forEach((doc) => {
+      const transaction = doc.data();
+      transactionList.push({ id: doc.id, ...transaction });
+    });
+    if (transactionList.length > 0){
+        localStorage.setItem('transactions', JSON.stringify(transactionList));
+    }
+    return transactionList;
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+    const cachedTransactions = localStorage.getItem('transactions')
+    if(cachedTransactions){
+        return JSON.parse(cachedTransactions)
+    }
+  }
+  return [];
+}
+
+
 async function addExpense(formData) {
     try {
-        const username = localStorage.getItem('loggedInUsername');
-        const docRef = await addDoc(collection(db, EXPENSES_COLLECTION), {
+        const transactionType = 'create';
+        const [docRef, newTransaction] = await Promise.all([addDoc(collection(db, EXPENSES_COLLECTION), {
             name: formData.name,
             amount: parseFloat(formData.amount),
             date: formData.date,
             category: formData.category,
             currency: formData.currency,
             user: username
-        });
+        }), addTransaction(transactionType, formData.name, parseFloat(formData.amount), formData.category, formData.currency)]);
         return docRef.id;
     } catch (e) {
         console.error("Error adding document: ", e);
@@ -176,11 +216,15 @@ async function addExpense(formData) {
 
 // Function to update an expense
 async function updateExpense(documentId, updatedFields) {
-    const expenseRef = doc(db, EXPENSES_COLLECTION, documentId); // Get a reference to the specific document
+    const expenseRef = doc(db, EXPENSES_COLLECTION, documentId);
+    let expenseDoc = await getDoc(expenseRef);
+    const transactionType = "update"
     try {
-        await updateDoc(expenseRef, {
+        expenseDoc = expenseDoc.data();
+        console.log(expenseRef)
+        await Promise.all([updateDoc(expenseRef, {
             ...updatedFields, // Spread the updated fields
-        });
+        }), addTransaction(transactionType, updatedFields.name, parseFloat(updatedFields.amount), updatedFields.category, expenseDoc.currency)])
         console.log("Document successfully updated!");
         return true;
     } catch (error) {
@@ -190,9 +234,12 @@ async function updateExpense(documentId, updatedFields) {
 
 // Function to delete an expense
 async function deleteExpense(documentId) {
-    const expenseRef = doc(db, EXPENSES_COLLECTION, documentId); // Get a reference to the specific document
+    const expenseRef = doc(db, EXPENSES_COLLECTION, documentId);
+    let expenseDoc = await getDoc(expenseRef);
+    const transactionType = "delete"
     try {
-        await deleteDoc(expenseRef);
+        expenseDoc = expenseDoc.data()
+        await Promise.all([deleteDoc(expenseRef), addTransaction(transactionType, expenseDoc.name, parseFloat(expenseDoc.amount), expenseDoc.category, expenseDoc.currency)]);
         console.log("Document successfully deleted!");
         return true;
     } catch (error) {
@@ -207,3 +254,4 @@ window.loginUser = loginUser;
 window.getAllCategories = getAllCategories;
 window.updateCategories = updateCategories;
 window.updateUserConfig = updateUserConfig;
+window.getAllTransactions = getAllTransactions;

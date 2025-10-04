@@ -217,6 +217,10 @@
     --fa:"\f073"
 }
 
+.fa-history{
+    --fa:"\f1da"
+}
+
 .fa-calendar-days.active,.fa-chart-simple.active,.fa-chart-pie.active {
     color: #69afde;
     transform: scale(1.2);        

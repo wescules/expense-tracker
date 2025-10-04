@@ -26,10 +26,10 @@
                         ${expenses.map((expense, index) => `
                             <tr>
                                 <td>
-                                    <div style="max-width: min-content">${escapeHTML(expense.name)}</div>
+                                    <div>${escapeHTML(expense.name)}</div>
                                     <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
                                 </td>
-                                <td >${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td>
+                                <td style="white-space: nowrap;">${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td>
                                 <td class="amount" style="color: #e74c3c;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
                                 
                                 <td>
