@@ -7,7 +7,7 @@
             if (!allTransactions || allTransactions.length === 0) {
                 return `<div class="no-data">No transactions found</div>`;
             }
-            // allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date))
+            allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date))
             
             const aggregated = allTransactions.reduce((acc, transaction) => {
                 const date = new Date(transaction.date).toISOString().split('T')[0]; // "YYYY-MM-DD"
