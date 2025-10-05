@@ -10,7 +10,6 @@
             allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date))
             
             const aggregated = allTransactions.reduce((acc, transaction) => {
-                // const date = new Date(transaction.date).toISOString().split('T')[0]; // "YYYY-MM-DD"
                 const chinaTimeOffset = new Date(transaction.date).getTime()+ 8 * 60 * 60 * 1000; // China time
                 // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
                 const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
@@ -23,9 +22,6 @@
                 <table class="expense-table">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th></th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
