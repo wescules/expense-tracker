@@ -189,7 +189,7 @@
                             return dateHeader + rows; // combine header + rows
                         })
                         .join('') // join all dates together
-}
+                    }
 
                     </tbody>
                 </table>
@@ -259,14 +259,6 @@
                 renderChartType(currentlySelectedChart, true);
                 updateLegend();
             }
-        }
-
-          const currencySelect = document.getElementById("currency");
-
-        // Load from localStorage
-        const cachedCurrency = localStorage.getItem("userConfig") ? JSON.parse(localStorage.getItem("userConfig")).defaultInputCurrency : null;
-        if (cachedCurrency) {
-            currencySelect.value = cachedCurrency; // set dropdown
         }
 
         
@@ -414,6 +406,14 @@
             document.getElementById("pie").classList.add("active")
             document.getElementById("bar").classList.remove("active")
             document.getElementById("calendar").classList.remove("active")
+
+            const currencySelect = document.getElementById("currency");
+
+            // Load from localStorage
+            const cachedCurrency = localStorage.getItem("userConfig") ? JSON.parse(localStorage.getItem("userConfig")).defaultInputCurrency : null;
+            if (cachedCurrency) {
+                currencySelect.value = cachedCurrency; // set dropdown
+            }
             
             try {
                 let cachedCategories = localStorage.getItem("allCategories")
