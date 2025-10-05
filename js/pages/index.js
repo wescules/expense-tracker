@@ -206,7 +206,7 @@
                                             : `<img src="assets/abbie.webp" class="circle-img">`
                                         }
                                         </td>
-                                        <td style="width: 70%;">
+                                        <td style="width: 65%;">
                                         <div>${escapeHTML(expense.name)}</div>
                                         <div style="color: ${
                                           categoryColors[expense.category]
@@ -214,7 +214,7 @@
                                             ${escapeHTML(expense.category)}
                                         </div>
                                         </td>
-                                        <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap; width: 20%;">
+                                        <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap; width: 25%;">
                                         ${formatCurrencyInTable(
                                           expense.amount,
                                           expense.currency

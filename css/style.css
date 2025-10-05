@@ -1018,7 +1018,7 @@ header {
   z-index: 1;
 }
 .row-content.swiped {
-  transform: translateX(-90px); /* matches .row-actions width */
+  transform: translateX(-100px); /* matches .row-actions width */
 }
 
 
