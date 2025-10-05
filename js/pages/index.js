@@ -251,7 +251,7 @@ function createTable(expenses) {
                                     : `<img src="assets/abbie.webp" class="circle-img">`
                                 }
                                 </td>
-                                <td style="width: 65%;">
+                                <td style="width: 65%; padding-left: 15px">
                                 <div>${escapeHTML(expense.name)}</div>
                                 <div style="color: ${
                                     categoryColors[expense.category]
