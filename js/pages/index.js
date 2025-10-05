@@ -128,6 +128,29 @@
 
         }
 
+        function toggleSlide(event, row) {
+            // Prevent toggling if clicking a button inside the row
+            if (event.target.closest('button')) return;
+
+            // Close all other rows
+            document.querySelectorAll('.row-content.swiped').forEach(r => {
+                if (r !== row.querySelector('.row-content')) {
+                     r.classList.remove('swiped');
+                }
+            });
+
+            // Toggle the clicked row
+            const content = row.querySelector('.row-content');
+            content.classList.toggle('swiped');
+        }
+
+        // Optional: click outside closes all rows
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.swipe-row')) {
+                document.querySelectorAll('.row-content.swiped').forEach(r => r.classList.remove('swiped'));
+            }
+        });
+
         function createTable(expenses) {
             if (!expenses || expenses.length === 0) {
                 const message = 'No expenses recorded for this month';
@@ -151,49 +174,125 @@
                             <th></th>
                             <th></th>
                             <th></th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                    ${Object.keys(aggregated)
+                    ${
+                      Object.keys(aggregated)
                         .sort()
                         .reverse()
-                        .map(date => {
-                            // Optional: display the date as a header
-                            const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(date).slice(0, 6).replace(',', '')}</td>`;
+                        .map((date) => {
+                          // Optional: display the date as a header
+                          const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(
+                            date
+                          )
+                            .slice(0, 6)
+                            .replace(",", "")}</td>`;
 
-                            // Map over each expense for this date
-                            const rows = aggregated[date].map(expense => `
-                                <tr>
-                                <td style="text-align: center">
-                                    ${expense.user === 'wescules'
-                                    ? `<img src="assets/wes.webp" class="circle-img">`
-                                    : `<img src="assets/abbie.webp" class="circle-img">`
-                                    }
-                                </td>
-                                <!-- <td>${formatDateFromUTC(expense.date).slice(0, 6).replace(',', '')}</td> -->
-                                <td>
-                                    <div>${escapeHTML(expense.name)}</div>
-                                    <div style="color: ${categoryColors[expense.category]};">${escapeHTML(expense.category)}</div>
-                                </td>
-                                <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap;">${formatCurrencyInTable(expense.amount, expense.currency)}</td>
-                                <td>                
-                                        <button class="delete-button" onclick="handleDeleteClick(event, '${expense.id}')">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `)
-                            .join(''); // join all rows for this date
+                          // Map over each expense for this date
+                          const rows = aggregated[date]
+                            .map(
+                              (expense, index) => `
+                            <tr class="swipe-row" onclick="toggleSlide(event, this)">
+                            <td colspan="4" style="padding: 0;">
+                                <div class="row-container">
+                                <div class="row-content">
+                                    <table style="width: 100%; table-layout: fixed;">
+                                    <tr>
+                                        <td style="text-align: center; width: 10%;">
+                                        ${
+                                          expense.user === "wescules"
+                                            ? `<img src="assets/wes.webp" class="circle-img">`
+                                            : `<img src="assets/abbie.webp" class="circle-img">`
+                                        }
+                                        </td>
+                                        <td style="width: 70%;">
+                                        <div>${escapeHTML(expense.name)}</div>
+                                        <div style="color: ${
+                                          categoryColors[expense.category]
+                                        };">
+                                            ${escapeHTML(expense.category)}
+                                        </div>
+                                        </td>
+                                        <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap; width: 20%;">
+                                        ${formatCurrencyInTable(
+                                          expense.amount,
+                                          expense.currency
+                                        )}
+                                        </td>
+                                    </tr>
+                                    </table>
+                                </div>
 
-                            return dateHeader + rows; // combine header + rows
+                                <!-- Hidden buttons revealed on swipe -->
+                                <div class="row-actions">
+                                    <button class="edit-button" onclick="editExpenseById(event, '${
+                                      expense.id
+                                    }')">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button class="delete-button" onclick="handleDeleteClick(event, '${
+                                      expense.id
+                                    }')">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                                </div>
+                            </td>
+                            </tr>
+                            `
+                            )
+                            .join(""); // join all rows for this date
+
+                          return dateHeader + rows; // combine header + rows
                         })
-                        .join('') // join all dates together
+                        .join("") // join all dates together
                     }
 
                     </tbody>
                 </table>
             `;
+        }
+
+        document.getElementById('updateBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const form = document.getElementById('updateExpenseForm');
+            form.reportValidity();
+            if (!form.checkValidity()) {
+                form.reportValidity();
+            }else{
+                await updateExpenseForm(e);
+            }
+        });
+
+        function editExpenseById(event, expenseId) {
+            event.preventDefault();
+            const expense = allExpenses.filter(exp => exp.id === expenseId)[0]
+            console.log(expense)
+            document.getElementById('updateExpenseModal').classList.add('active');
+
+            if (expense) {
+                loadExpenseIntoModal(expense.id, expense.name, expense.category, expense.amount, expense.date, expense.currency);
+            }
+            document.getElementById('updateExpenseModal').classList.add('active');
+        }
+
+        function loadExpenseIntoModal(id, name, category, amount, date, currency) {
+            document.getElementById('update_name_custom').value = name;
+            document.getElementById('update_currency').value = currency;
+            document.getElementById('update_category').value = category;
+            document.getElementById('update_amount').value = Math.abs(amount);
+            
+            const localDate = new Date(date);
+            const year = localDate.getFullYear();
+            const month = String(localDate.getMonth() + 1).padStart(2, '0');
+            const day = String(localDate.getDate()).padStart(2, '0');
+            document.getElementById('update_date').value = `${year}-${month}-${day}`;
+            
+            const form = document.getElementById('updateExpenseForm');
+            form.dataset.editId = id;
+            
+            form.scrollIntoView({ behavior: 'smooth' });
         }
 
         function updateTable() {
@@ -388,6 +487,7 @@
         function populateCategoryDropDown(categories) {
             try {
                 const categorySelect = document.getElementById('category');
+                const updateCategorySelect = document.getElementById('update_category');
                 let parsedCategories = [];
                 if(typeof categories === 'object' && categories.categories){
                     parsedCategories = categories.categories
@@ -395,6 +495,9 @@
                     parsedCategories = JSON.parse(categories).categories
                 }
                 categorySelect.innerHTML = parsedCategories.map(cat =>
+                    `<option value="${cat}">${cat}</option>`
+                ).join('');
+                updateCategorySelect.innerHTML = parsedCategories.map(cat =>
                     `<option value="${cat}">${cat}</option>`
                 ).join('');
             } catch (error) {
@@ -588,6 +691,8 @@
 
         function showDeleteModal(id) {
             expenseToDelete = id;
+            const expenseName = allExpenses.filter(exp => exp.id === id)[0].name
+            document.getElementById('deleteExpenseName').innerText = expenseName
             document.getElementById('deleteModal').classList.add('active');
         }
 
@@ -694,6 +799,65 @@
 
         function closeAddExpenseModal() {
             document.getElementById('addExpenseModal').classList.remove('active');
+        }
+
+        async function updateExpenseForm(event) {
+            event.preventDefault();
+            let amount = parseFloat(document.getElementById('update_amount').value);
+            const editId = document.getElementById('updateExpenseForm').getAttribute('data-edit-id')
+            const formData = {
+                name: document.getElementById('update_name_custom').value,
+                category: document.getElementById('update_category').value,
+                amount: -amount,
+                date: getISODateWithLocalTime(document.getElementById('update_date').value),
+                currency: document.getElementById('update_currency').value
+            };
+
+            console.log('Form Data to submit:', formData);
+            try {
+                const spinner = document.getElementById("updateSpinner");
+                const saveBtnText = document.getElementById("update-btn-text");
+                const saveBtn = document.getElementById("updateBtn");
+                saveBtn.disabled = true;
+                saveBtnText.style.opacity = 0;
+                spinner.style.display = "inline-block";
+
+
+                const response = await updateExpense(editId, formData);
+                const messageDiv = document.getElementById('updateFormMessage');
+                if (response) {
+                    spinner.style.display = "none";
+                    saveBtnText.style.opacity = 1;
+                    saveBtn.disabled = false;
+                    messageDiv.textContent = 'Expense updated successfully!';
+                    messageDiv.className = 'form-message success';
+                    document.getElementById('updateExpenseForm').reset();
+                    document.getElementById('updateExpenseModal').classList.remove('active');
+                    await initialize();
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    document.getElementById('update_date').value = `${year}-${month}-${day}`;
+                } else {
+                    const error = await response.json();
+                    messageDiv.textContent = `Error: ${error.error || 'Failed to update expense'}`;
+                    messageDiv.className = 'form-message error';
+                }
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = 'form-message';
+                }, 3000);
+            } catch (error) {
+                console.error('Error updating expense:', error);
+                const messageDiv = document.getElementById('formMessage');
+                messageDiv.textContent = 'Error: Failed to update expense';
+                messageDiv.className = 'form-message error';
+            }
+        }
+
+        function closeUpdateExpenseModal() {
+            document.getElementById('updateExpenseModal').classList.remove('active');
         }
         
         document.addEventListener('DOMContentLoaded', initialize);

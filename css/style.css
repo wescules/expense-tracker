@@ -9,8 +9,8 @@
 }
 
 .circle-img {
-  width: 32px;
-  height: 32px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   object-fit: cover;
   transition: transform 0.3s ease;
@@ -975,6 +975,52 @@ header {
 .table-controls label:hover {
     background-color: var(--accent);
 }
+
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+}
+
+.row-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+}
+
+.row-actions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  padding-right: 10px;
+  width: 80px; /* same as your slide distance */
+  z-index: 0;
+}
+
+.row-actions button {
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.row-content {
+  width: 100%;
+  background: var(--bg-secondary);
+  transition: transform 0.3s ease;
+  z-index: 1;
+}
+.row-content.swiped {
+  transform: translateX(-90px); /* matches .row-actions width */
+}
+
 
 /* Cal-Heatmap */
 
