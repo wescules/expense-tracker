@@ -163,8 +163,7 @@
                             const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(date).slice(0, 6).replace(',', '')}</td>`;
 
                             // Map over each expense for this date
-                            const rows = aggregated[date]
-                            .map(expense => `
+                            const rows = aggregated[date].map(expense => `
                                 <tr>
                                 <td style="text-align: center">
                                     ${expense.user === 'wescules'
@@ -327,6 +326,10 @@
             });
         }
 
+        function isEnabledCategory(category) {
+            return disabledCategories.size !== 0 ? disabledCategories.has(category) : !disabledCategories.has(category)
+        }
+
         function updateLegend() {
             const legendContainer = document.getElementById('customLegend');
             legendContainer.innerHTML = '';
@@ -360,15 +363,17 @@
                 legendContainer.appendChild(item);
             });
 
-            
             const activeTotalExpenses = monthExpenses
-                .filter(exp => exp.amount < 0 && !disabledCategories.has(exp.category)).reduce((sum, exp) => sum +
+                .filter(exp => exp.amount < 0 && isEnabledCategory(exp.category)).reduce((sum, exp) => sum +
                     convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
+
+            activeTotalExpensesCount = monthExpenses
+                .filter(exp => exp.amount < 0 && isEnabledCategory(exp.category)).length
 
             const totalsHtml = `
                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Total:</span>
+                                <span>Total <lmao style="font-size: x-small">(${activeTotalExpensesCount} expenses)</lmao></span>
                                 <span class="amount">
                                     ${formatCurrency(activeTotalExpenses)}
                                 </span>
