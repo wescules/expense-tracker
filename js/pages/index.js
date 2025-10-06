@@ -357,7 +357,6 @@ document.getElementById('updateBtn').addEventListener('click', async (e) => {
 function editExpenseById(event, expenseId) {
     event.preventDefault();
     const expense = allExpenses.filter(exp => exp.id === expenseId)[0]
-    console.log(expense)
     document.getElementById('updateExpenseModal').classList.add('active');
 
     if (expense) {
@@ -694,7 +693,7 @@ async function initialize() {
         const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
         if (!data) throw new Error('Failed to fetch expenses');
         allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
-        allTransactions = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
+        allTransactions = Array.isArray(transactions) ? transactions : (transactions && Array.isArray(transactions.expenses) ? transactions.expenses : []);
 
         const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
         populateCategoryDropDown(categories);
