@@ -43,10 +43,10 @@
                     <img src="pwa/icon-192.png" alt="ExpenseOwl Logo" height="85"
                         style="vertical-align: middle; margin-right: 20px;" fetchpriority="high">
                 </a>
-                <a href="index.html" class="view-button active" data-tooltip="Dashboard">
+                <a id="dashboardNav" class="view-button active" data-tooltip="Dashboard" onclick="switchToDashboard()">
                     <i class="fa-solid fa-chart-pie"></i>
                 </a>
-                <a href="transactions.html" class="view-button" data-tooltip="History">
+                <a id="historyNav" class="view-button" data-tooltip="History" onclick="switchToTransactions()">
                     <i class="fa-solid fa-history" aria-hidden="true"></i>
                 </a>
                 <a href="settings.html" class="view-button" data-tooltip="Settings">
@@ -54,8 +54,9 @@
                 </a>
             </div>
         </header>
-
-        <div class="month-navigation">
+        <div id="tableHistoryContainer">
+        </div>
+        <div id='monthNavigation' class="month-navigation">
             <button id="prevMonth" class="nav-button"><i class="fa-solid fa-arrow-left"></i></button>
             <div class="current-month" id="currentMonth">September 2025</div>
             <button id="nextMonth" class="nav-button"><i class="fa-solid fa-arrow-right"></i></button>
@@ -79,7 +80,7 @@
                 <div class="cashflow-value" id="cashflow-balance"></div>
             </div>
         </div>
-        <div class="chart-container">
+        <div id='chartContainer' class="chart-container">
             <div class="chart-icons">
                 <i id="pie" class="fa-solid fa-chart-pie custom-chart" onclick="renderChartType('pie')"
                     data-tooltip></i>

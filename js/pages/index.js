@@ -5,6 +5,7 @@ let chart = null;
 let currentlySelectedChart = 'pie';
 let currentDate = new Date();
 let allExpenses = [];
+let allTransactions = [];
 let disabledCategories = new Set();
 let categoryColors = {};
 let categoryData = [];
@@ -53,6 +54,49 @@ function getPriceRangeForCalendar(){
         return [0, 44000]
     }
 }
+
+function switchToTransactions() {
+    const historyNav = document.getElementById('historyNav')
+    historyNav.classList.add('active')
+    const dashboardNav = document.getElementById('dashboardNav')
+    dashboardNav.classList.remove('active')
+
+    const tableHistoryContainer = document.getElementById('tableHistoryContainer')
+    tableHistoryContainer.style.display = 'flex';
+
+    const monthNavigation = document.getElementById('monthNavigation')
+    const toggleExpenseFormBtn = document.getElementById('toggleExpenseFormBtn')
+    const cashflow_section = document.getElementById('cashflow-section')
+    const chartContainer = document.getElementById('chartContainer')
+    const tableContainer = document.getElementById('tableContainer')
+    monthNavigation.style.display = 'none'
+    toggleExpenseFormBtn.style.display = 'none'
+    cashflow_section.style.display = 'none'
+    chartContainer.style.display = 'none'
+    tableContainer.style.display = 'none'
+}
+
+function switchToDashboard() {
+    const historyNav = document.getElementById('historyNav')
+    historyNav.classList.remove('active')
+    const dashboardNav = document.getElementById('dashboardNav')
+    dashboardNav.classList.add('active')
+
+    const tableHistoryContainer = document.getElementById('tableHistoryContainer')
+    tableHistoryContainer.style.display = 'none';
+
+    const monthNavigation = document.getElementById('monthNavigation')
+    const toggleExpenseFormBtn = document.getElementById('toggleExpenseFormBtn')
+    const cashflow_section = document.getElementById('cashflow-section')
+    const chartContainer = document.getElementById('chartContainer')
+    const tableContainer = document.getElementById('tableContainer')
+    monthNavigation.style.display = 'flex'
+    toggleExpenseFormBtn.style.display = 'flex'
+    cashflow_section.style.display = 'flex'
+    chartContainer.style.display = 'flex'
+    tableContainer.style.display = 'flex'
+}
+
 
 function createCalendarView() {
     if (chart) {
@@ -550,6 +594,66 @@ function populateCategoryDropDown(categories) {
     }
 }
 
+function createTransactionTable() {
+    if (!allTransactions || allTransactions.length === 0) {
+        return `<div class="no-data">No transactions found</div>`;
+    }
+    allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date))
+    
+    const aggregated = allTransactions.reduce((acc, transaction) => {
+        const chinaTimeOffset = new Date(transaction.date).getTime()+ 8 * 60 * 60 * 1000; // China time
+        // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
+        const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+
+        if (!acc[localDate]) acc[localDate] = [];
+        acc[localDate].push(transaction);
+        return acc;
+    }, {});
+    return `
+        <table class="expense-table">
+            <thead>
+                <tr>
+                </tr>
+            </thead>
+            <tbody>
+
+                ${Object.keys(aggregated)
+                    .sort()
+                    .reverse()
+                    .map(date => {
+                        // Optional: display the date as a header
+                        const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(date).slice(0, 6).replace(',', '')}</td>`;
+
+                        // Map over each expense for this date
+                        const rows = aggregated[date]
+                        .map(transaction => `
+                            <tr>
+                            <td style="text-align: center">
+                                ${transaction.user === 'wescules'
+                                ? `<img src="assets/wes.webp" class="circle-img">`
+                                : `<img src="assets/abbie.webp" class="circle-img">`
+                                }
+                            </td>
+                            <td>
+                                <lmao style="color: ${transaction.transactionType === 'create' ? '#8AC926' :transaction.transactionType === 'update'? 'goldenrod' : '#e74c3c'}">
+                                    ${transaction.transactionType.charAt(0).toUpperCase() + transaction.transactionType.slice(1)}d
+                                </lmao>${escapeHTML(transaction.name)}
+                            </td> 
+                            <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap;">${formatCurrencyInTable(transaction.amount, transaction.currency)}</td>
+                            </tr>
+                        `)
+                        .join('');
+
+                        return dateHeader + rows; // combine header + rows
+                    })
+                    .join('')
+                }
+            </tbody>
+        </table>
+    `;
+}
+
+
 async function initialize() {
     document.getElementById("pie").classList.add("active")
     document.getElementById("bar").classList.remove("active")
@@ -564,6 +668,13 @@ async function initialize() {
     }
     
     try {
+        const cachedTransactions = localStorage.getItem('transactions');
+        const tableContainer = document.getElementById('tableHistoryContainer');
+        if (cachedTransactions) {
+            allTransactions = JSON.parse(cachedTransactions);
+            tableContainer.innerHTML = createTransactionTable();
+        }
+
         let cachedCategories = localStorage.getItem("allCategories")
         if (cachedCategories) {
             populateCategoryDropDown(cachedCategories);
@@ -573,15 +684,17 @@ async function initialize() {
         if (cachedExpenses) {
             allExpenses = JSON.parse(cachedExpenses);
             const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
+            switchToDashboard();
             assignCategoryColors(uniqueCategories);
             updateMonthDisplay();
             updateChartAndLegend();
             updateTable();
         }
-        const [data, categories] = await Promise.all([getAllExpenses(), getAllCategories()]);
+
+        const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
         if (!data) throw new Error('Failed to fetch expenses');
-        allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses
-            : []);
+        allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
+        allTransactions = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
 
         const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
         populateCategoryDropDown(categories);
@@ -589,6 +702,7 @@ async function initialize() {
         updateMonthDisplay();
         updateChartAndLegend();
         updateTable();
+        tableContainer.innerHTML = createTransactionTable(allTransactions)
     } catch (error) {
         console.error('Failed to initialize dashboard:', error);
     }

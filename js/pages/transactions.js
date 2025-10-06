@@ -68,16 +68,12 @@
                 const tableContainer = document.getElementById('tableContainer');
                 if (cached) {
                     allTransactions = JSON.parse(cached);
-                    const uniqueCategories = [...new Set(allTransactions.map(exp => exp.category))];
-                    assignCategoryColors(uniqueCategories);
                     tableContainer.innerHTML = createTable(allTransactions);
                 }
 
                 const data = await getAllTransactions();
                 allTransactions = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
                 
-                const uniqueCategories = [...new Set(allTransactions.map(exp => exp.category))];
-                assignCategoryColors(uniqueCategories);
                 tableContainer.innerHTML = createTable(allTransactions)
             } catch (error) {
                 console.error('Failed to initialize table:', error);
