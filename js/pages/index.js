@@ -91,7 +91,7 @@ function switchToDashboard() {
     const chartContainer = document.getElementById('chartContainer')
     const tableContainer = document.getElementById('tableContainer')
     monthNavigation.style.display = 'flex'
-    toggleExpenseFormBtn.style.display = 'flex'
+    toggleExpenseFormBtn.style.display = ''
     cashflow_section.style.display = 'flex'
     chartContainer.style.display = 'flex'
     tableContainer.style.display = 'flex'
