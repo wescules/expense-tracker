@@ -9,6 +9,7 @@ let allTransactions = [];
 let disabledCategories = new Set();
 let categoryColors = {};
 let categoryData = [];
+let categories_settings = [];
 
 function renderChartType(type, forceRender = false) {
     const calendarDiv = document.getElementById('cal-heatmap');
@@ -60,6 +61,8 @@ function switchToTransactions() {
     historyNav.classList.add('active')
     const dashboardNav = document.getElementById('dashboardNav')
     dashboardNav.classList.remove('active')
+    const settingsNav = document.getElementById('settingsNav')
+    settingsNav.classList.remove('active')
 
     const tableHistoryContainer = document.getElementById('tableHistoryContainer')
     tableHistoryContainer.style.display = 'flex';
@@ -74,13 +77,23 @@ function switchToTransactions() {
     cashflow_section.style.display = 'none'
     chartContainer.style.display = 'none'
     tableContainer.style.display = 'none'
+
+    const categories_manager = document.getElementById('categories_manager')
+    const currency_selector = document.getElementById('currency_selector')
+    const theme_selector = document.getElementById('theme_selector')
+    categories_manager.style.display = 'none'
+    currency_selector.style.display = 'none'
+    theme_selector.style.display = 'none'
 }
 
-function switchToDashboard() {
+function switchToSettings() {
     const historyNav = document.getElementById('historyNav')
     historyNav.classList.remove('active')
     const dashboardNav = document.getElementById('dashboardNav')
-    dashboardNav.classList.add('active')
+    dashboardNav.classList.remove('active')
+    const settingsNav = document.getElementById('settingsNav')
+    settingsNav.classList.add('active')
+    
 
     const tableHistoryContainer = document.getElementById('tableHistoryContainer')
     tableHistoryContainer.style.display = 'none';
@@ -90,11 +103,49 @@ function switchToDashboard() {
     const cashflow_section = document.getElementById('cashflow-section')
     const chartContainer = document.getElementById('chartContainer')
     const tableContainer = document.getElementById('tableContainer')
-    monthNavigation.style.display = 'flex'
+    monthNavigation.style.display = 'none'
+    toggleExpenseFormBtn.style.display = 'none'
+    cashflow_section.style.display = 'none'
+    chartContainer.style.display = 'none'
+    tableContainer.style.display = 'none'
+
+
+    const categories_manager = document.getElementById('categories_manager')
+    const currency_selector = document.getElementById('currency_selector')
+    const theme_selector = document.getElementById('theme_selector')
+    categories_manager.style.display = ''
+    currency_selector.style.display = ''
+    theme_selector.style.display = ''
+}
+
+function switchToDashboard() {
+    const historyNav = document.getElementById('historyNav')
+    historyNav.classList.remove('active')
+    const dashboardNav = document.getElementById('dashboardNav')
+    dashboardNav.classList.add('active')
+    const settingsNav = document.getElementById('settingsNav')
+    settingsNav.classList.remove('active')
+
+    const tableHistoryContainer = document.getElementById('tableHistoryContainer')
+    tableHistoryContainer.style.display = 'none';
+
+    const monthNavigation = document.getElementById('monthNavigation')
+    const toggleExpenseFormBtn = document.getElementById('toggleExpenseFormBtn')
+    const cashflow_section = document.getElementById('cashflow-section')
+    const chartContainer = document.getElementById('chartContainer')
+    const tableContainer = document.getElementById('tableContainer')
+    monthNavigation.style.display = ''
     toggleExpenseFormBtn.style.display = ''
-    cashflow_section.style.display = 'flex'
-    chartContainer.style.display = 'flex'
-    tableContainer.style.display = 'flex'
+    cashflow_section.style.display = ''
+    chartContainer.style.display = ''
+    tableContainer.style.display = ''
+
+    const categories_manager = document.getElementById('categories_manager')
+    const currency_selector = document.getElementById('currency_selector')
+    const theme_selector = document.getElementById('theme_selector')
+    categories_manager.style.display = 'none'
+    currency_selector.style.display = 'none'
+    theme_selector.style.display = 'none'
 }
 
 
@@ -677,6 +728,7 @@ async function initialize() {
         let cachedCategories = localStorage.getItem("allCategories")
         if (cachedCategories) {
             populateCategoryDropDown(cachedCategories);
+            renderCategories(JSON.parse(cachedCategories).categories)
         }
 
         const cachedExpenses = localStorage.getItem('allExpenses');
@@ -691,9 +743,11 @@ async function initialize() {
         }
 
         const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
+        await Promise.all([renderCategories(categories.categories), populateCurrencySelect()]);
         if (!data) throw new Error('Failed to fetch expenses');
         allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
         allTransactions = Array.isArray(transactions) ? transactions : (transactions && Array.isArray(transactions.expenses) ? transactions.expenses : []);
+        categories_settings = JSON.parse(cachedCategories).categories
 
         const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
         populateCategoryDropDown(categories);
@@ -701,8 +755,14 @@ async function initialize() {
         updateMonthDisplay();
         updateChartAndLegend();
         updateTable();
-        switchToDashboard();
         tableContainer.innerHTML = createTransactionTable(allTransactions)
+        if (document.getElementById('dashboardNav').classList.contains('active')) {
+            switchToDashboard()
+        } else if(document.getElementById('historyNav').classList.contains('active')){
+            switchToTransactions()
+        } else if(document.getElementById('settingsNav').classList.contains('active')){
+            switchToSettings()
+        }
     } catch (error) {
         console.error('Failed to initialize dashboard:', error);
     }
@@ -724,22 +784,20 @@ function drawExpenseChart() {
 
     // Step 2: Aggregate expenses per day
     const expensesByDay = {};
-    const convertCurrencyTo = JSON.parse(
-    localStorage.getItem("userConfig")
-    ).convertCurrencyTo;
+    const convertCurrencyTo = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo;
     allExpenses.forEach((exp) => {
-    const day = exp.date.split("T")[0];
-    const amount = convertCurrency(
-        Math.abs(exp.amount),
-        exp.currency,
-        convertCurrencyTo
-    );
-    expensesByDay[day] = (expensesByDay[day] || 0) + amount;
+        const day = exp.date.split("T")[0];
+        const amount = convertCurrency(
+            Math.abs(exp.amount),
+            exp.currency,
+            convertCurrencyTo
+        );
+        expensesByDay[day] = (expensesByDay[day] || 0) + amount;
     });
 
     if (Object.keys(expensesByDay).length === 0) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    return;
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        return;
     }
 
     // Step 3: Prepare dataset with zeros for missing days

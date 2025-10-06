@@ -49,13 +49,14 @@
                 <a id="historyNav" class="view-button" data-tooltip="History" onclick="switchToTransactions()">
                     <i class="fa-solid fa-history" aria-hidden="true"></i>
                 </a>
-                <a href="settings.html" class="view-button" data-tooltip="Settings">
+                <a id="settingsNav" class="view-button" data-tooltip="Settings" onclick="switchToSettings()">
                     <i class="fa-solid fa-gear"></i>
                 </a>
             </div>
         </header>
-        <div id="tableHistoryContainer">
-        </div>
+
+        <div id="tableHistoryContainer"></div>
+
         <div id='monthNavigation' class="month-navigation">
             <button id="prevMonth" class="nav-button"><i class="fa-solid fa-arrow-left"></i></button>
             <div class="current-month" id="currentMonth">September 2025</div>
@@ -99,6 +100,79 @@
             </div>
         </div>
         <div id="tableContainer">
+        </div>
+        <div id='categories_manager' class="form-container">
+            <h2 align="center">Category Settings</h2>
+            <div id="categories-manager">
+                <div id="categories-list" class="categories-list">
+                </div>
+                <div class="category-input-container">
+                    <input type="text" id="newCategory" placeholder="Add new category">
+                    <button id="addCategory" class="nav-button">Add</button>
+                </div>
+                <button id="saveCategories" class="nav-button">Save Categories</button>
+                <div id="categoriesMessage" class="form-message"></div>
+            </div>
+        </div>
+
+        <div id='currency_selector' class="settings-container">
+            <div class="form-container half-width">
+                <h2 align="center">Calculate Expenses in </h2>
+                <div class="currency-selector">
+                    <select id="currencyExpenseSelect">
+                    </select>
+                    <button id="saveExpenseCurrency" class="nav-button">Save</button>
+                </div>
+                <div id="currencyExpenseMessage" class="form-message"></div>
+            </div>
+            <div class="form-container half-width">
+                <h2 align="center">Default Input Currency</h2>
+                <div class="currency-selector">
+                    <select id="currencyInputSelect">
+                    </select>
+                    <button id="saveInputCurrency" class="nav-button">Save</button>
+                </div>
+                <div id="currencyInputMessage" class="form-message"></div>
+            </div>
+        </div>
+
+        <div id='theme_selector' class="settings-container">
+            <div class="form-container half-width">
+                <h2 align="center">Theme Settings</h2>
+                <div class="theme-selector">
+                    <select id="themeSelect">
+                        <option value="system">System Default</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div id="themeMessage" class="form-message"></div>
+            </div>
+            <div class="form-container half-width">
+                <h2 align="center">Import/Export Data</h2>
+                <div class="export-buttons">
+                    <div class="export-options">
+                        <a href="/export/csv" id="csv-export-file" class="nav-button" download="expenses.csv">Export to
+                            CSV</a>
+                    </div>
+                    <div class="import-option">
+                        <label for="csv-import-file" class="nav-button">Import from CSV</label>
+                        <input type="file" id="csv-import-file" accept=".csv" style="display: none;">
+                    </div>
+                    <div class="import-option">
+                        <label for="csv-import-file-old" class="nav-button">Import from ExpenseOwl v3.20-</label>
+                        <input type="file" id="csv-import-file-old" accept=".csv" style="display: none;">
+                    </div>
+                </div>
+                <div id="importMessage" class="form-message"></div>
+                <div id="importSummary" class="import-summary" style="display: none;">
+                    <h3>Import Summary</h3>
+                    <p>Total Processed: <span id="summary-processed"></span></p>
+                    <p>Imported: <span id="summary-imported"></span></p>
+                    <p>Skipped: <span id="summary-skipped"></span></p>
+                    <p>New Categories: <span id="summary-new-categories"></span></p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -230,14 +304,16 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <script type="module" src="js/database.js"></script>
-        <script src="js/functions.js"></script>
-        <script src="js/categoryPicker.js"></script>
-        <script src="js/pages/index.js"></script>
+    <script type="module" src="js/database.js"></script>
+    <script src="js/functions.js"></script>
+    <script src="js/categoryPicker.js"></script>
+    <script src="js/pages/settings.js"></script>
+    <script src="js/pages/index.js"></script>
 
-        <script src="js/externalLibraries/luxon.min.js"></script>
-        <script src="js/externalLibraries/chartjs-adapter-luxon.js"></script>
+    <script src="js/externalLibraries/luxon.min.js"></script>
+    <script src="js/externalLibraries/chartjs-adapter-luxon.js"></script>
 
 </body>
 

@@ -1,7 +1,5 @@
-        let categories = [];
         let allTags = new Set();
         let editFormSelectedTags = new Set();
-        let currentCurrency = "usd";
         let currentStartDate = 1;
         let draggedItem = null;
         let recurringExpenses = [];
@@ -19,10 +17,10 @@
         }
 
         // --- Category Management ---
-        function renderCategories() {
+        function renderCategories(categories_settings) {
             const list = document.getElementById('categories-list');
             list.innerHTML = '';
-            categories.forEach((category, index) => {
+            categories_settings.forEach((category, index) => {
                 const item = document.createElement('div');
                 item.className = 'category-item';
                 item.draggable = true;
@@ -92,10 +90,10 @@
                 const isBefore = e.clientY < rect.top + rect.height / 2;
                 if (!isBefore) toIndex++;
                 if (fromIndex < toIndex) toIndex--;
-                const list = categories;
+                const list = categories_settings;
                 const movedItem = list.splice(fromIndex, 1)[0];
                 list.splice(toIndex, 0, movedItem);
-                renderCategories();
+                renderCategories(categories_settings);
             }
             return false;
         }
@@ -104,9 +102,11 @@
             const input = document.getElementById('newCategory');
             let category = input.value.trim();
             category = category.replace(/[<>]/g, ' ').trim();
-            if (category && !categories.includes(category)) {
-                categories.push(category);
-                renderCategories();
+            console.log(category)
+            console.log(categories_settings)
+            if (category && !categories_settings.includes(category)) {
+                categories_settings.push(category);
+                renderCategories(categories_settings);
                 input.value = '';
             } else if (categories.includes(category)) {
                 showMessage('categoriesMessage', 'Category already exists', false);
@@ -116,8 +116,8 @@
         }
 
         function removeCategory(index) {
-            categories.splice(index, 1);
-            renderCategories();
+            categories_settings.splice(index, 1);
+            renderCategories(categories_settings);
         }
 
         async function saveCategories() {
@@ -126,7 +126,7 @@
                 return;
             }
             try {
-                const categoryMap = {categories: categories};
+                const categoryMap = {categories: categories_settings};
                 const response = await updateCategories(categoryMap);
 
                 if (response) {
@@ -299,21 +299,19 @@
                 let cached = localStorage.getItem("allCategories")
 
                 if (cached) {
-                    categories = JSON.parse(cached).categories || [];
-                    currentCurrency = configResponse.currency;
+                    categories_settings = JSON.parse(cached).categories || [];
                     currentStartDate = 1;
                     allTags.clear();
                     (expensesResponse || []).forEach(exp => (exp.tags || []).forEach(tag => allTags.add(tag)));
-                    await Promise.all([renderCategories(), populateCurrencySelect()]);
+                    await Promise.all([renderCategories(categories_settings), populateCurrencySelect()]);
                 }
                 const categoriesResponse = await getAllCategories()
-                categories = categoriesResponse.categories || [];
-                currentCurrency = configResponse.currency;
+                categories_settings = categoriesResponse.categories || [];
                 currentStartDate = 1;
                 allTags.clear();
                 (expensesResponse || []).forEach(exp => (exp.tags || []).forEach(tag => allTags.add(tag)));
 
-                await Promise.all([renderCategories(), populateCurrencySelect()]);
+                await Promise.all([renderCategories(categories_settings), populateCurrencySelect()]);
             } catch (error) {
                 console.error('Failed to initialize settings:', error);
                 showMessage('categoriesMessage', 'Failed to load settings', false);
@@ -352,5 +350,5 @@
         document.getElementById('csv-import-file-old').addEventListener('change', handleCsvImportOld);
         document.getElementById('newCategory').addEventListener('keypress', e => e.key === 'Enter' && addCategory());
 
-        document.addEventListener('DOMContentLoaded', initialize);
+        // document.addEventListener('DOMContentLoaded', initialize);
         window.removeCategory = removeCategory;
