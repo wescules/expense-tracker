@@ -683,11 +683,11 @@ async function initialize() {
         if (cachedExpenses) {
             allExpenses = JSON.parse(cachedExpenses);
             const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
-            switchToDashboard();
             assignCategoryColors(uniqueCategories);
             updateMonthDisplay();
             updateChartAndLegend();
             updateTable();
+            switchToDashboard();
         }
 
         const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
@@ -701,6 +701,7 @@ async function initialize() {
         updateMonthDisplay();
         updateChartAndLegend();
         updateTable();
+        switchToDashboard();
         tableContainer.innerHTML = createTransactionTable(allTransactions)
     } catch (error) {
         console.error('Failed to initialize dashboard:', error);
