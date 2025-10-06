@@ -11,51 +11,6 @@ let categoryColors = {};
 let categoryData = [];
 let categories_settings = [];
 
-function renderChartType(type, forceRender = false) {
-    const calendarDiv = document.getElementById('cal-heatmap');
-    const chartCanvas = document.getElementById('chartCanvas');
-    const pieButton = document.getElementById("pie");
-    const barButton = document.getElementById("bar");
-    const calendarButton = document.getElementById("calendar");
-
-    if (type === 'pie' && (currentlySelectedChart !== 'pie' || forceRender)) {
-        calendarDiv.innerHTML = ''; // Clear previous calendar view
-        chartCanvas.style.display = 'block';
-        chartCanvas.style.visibility = 'visible';
-
-        pieButton.classList.add("active")
-        barButton.classList.remove("active")
-        calendarButton.classList.remove("active")
-        createPieChart();
-    } else if (type === 'bar' && (currentlySelectedChart !== 'bar' || forceRender)) {
-        calendarDiv.innerHTML = ''; // Clear previous calendar view
-        chartCanvas.style.display = 'block';
-        chartCanvas.style.visibility = 'visible'
-
-        pieButton.classList.remove("active")
-        barButton.classList.add("active")
-        calendarButton.classList.remove("active")
-        drawExpenseChart();
-    } else if (type === 'calendar' && (currentlySelectedChart !== 'calendar' || forceRender)) {
-        calendarDiv.innerHTML = ''; // Clear previous calendar view
-        pieButton.classList.remove("active")
-        barButton.classList.remove("active")
-        calendarButton.classList.add("active")
-        createCalendarView();
-    }
-}
-
-function getPriceRangeForCalendar(){
-    if (currentCurrency == 'usd'){
-        return [0, 500]
-    }
-    else if (currentCurrency === 'cny'){
-        return [0, 3500]
-    }else if (currentCurrency === 'inr'){
-        return [0, 44000]
-    }
-}
-
 function switchToTransactions() {
     const historyNav = document.getElementById('historyNav')
     historyNav.classList.add('active')
@@ -148,262 +103,19 @@ function switchToDashboard() {
     theme_selector.style.display = 'none'
 }
 
-
-function createCalendarView() {
-    if (chart) {
-        chart.destroy();
-    }
-    currentlySelectedChart = 'calendar';
-    document.getElementById('chartCanvas').style.display = 'none';
-    document.getElementById('chartCanvas').style.visibility = 'hidden';
-
-    let spendingData = [];
-    allExpenses.forEach((exp) => {
-        const day = exp.date.split("T")[0];
-        const amount = convertCurrency(
-        Math.abs(exp.amount),
-        exp.currency,
-        currentCurrency
-        );
-        spendingData.push({ date: day, value: amount });
-    });
-    
-
-    const cal = new CalHeatmap();
-    cal.paint(
-        {
-        theme: theme,
-        itemSelector: "#cal-heatmap",
-        range: 1,
-        date: { start: currentDate }, // October = month index 9
-        domain: {
-            type: "month",
-            padding: [10, 10, 10, 10],
-            label: { text: "" },
-        },
-        subDomain: {
-            type: "xDay",
-            radius: 2,
-            width: 30,
-            height: 30,
-            label: "D",
-        },
-        data: {
-            source: spendingData,
-            type: "json",
-            x: "date",
-            y: "value",
-        },
-        scale: {
-            color: {
-            range: ['green', 'red'],
-            type: "linear",
-            interpolate: "hsl",
-            domain: getPriceRangeForCalendar(),
-            },
-        },
-        legend: [50, 100, 150, 200, 250],
-        tooltip: false,
-        },
-        [
-        [
-            Tooltip,
-            {
-            text: function (date, value, dayjsDate) {
-                return (
-                (value ? currencyBehaviors[currentCurrency].symbol + value.toFixed(2) : "No data") +
-                " on " +
-                dayjsDate.format("LL")
-                );
-            },
-            },
-        ],
-        ]
-    );
-
+function isEnabledCategory(category) {
+    return disabledCategories.size !== 0 ? disabledCategories.has(category) : !disabledCategories.has(category)
 }
 
-let startX = 0;
-let currentRow = null;
-let isSwiping = false;
-
-function toggleSlide(event, row) {
-    // Prevent toggling if clicking a button inside the row
-    if (event.target.closest('button')) return;
-
-    // Close all other rows
-    document.querySelectorAll('.row-content.swiped').forEach(r => {
-        if (r !== row.querySelector('.row-content')) {
-        r.classList.remove('swiped');
-        }
-    });
-
-    // Toggle the clicked row (for desktop)
-    const content = row.querySelector('.row-content');
-    content.classList.toggle('swiped');
+function toggleCategory(category) {
+    if (disabledCategories.has(category)) {
+        disabledCategories.delete(category);
+    } else {
+        disabledCategories.add(category);
+    }
+    updateLegend();
+    updateTable();
 }
-
-// Touch start (finger touches screen)
-document.addEventListener('touchstart', e => {
-    const row = e.target.closest('.swipe-row');
-    if (!row) return;
-
-    startX = e.touches[0].clientX;
-    currentRow = row;
-    isSwiping = false;
-});
-
-// Touch move (finger moves)
-document.addEventListener('touchmove', e => {
-    if (!currentRow) return;
-
-    const diffX = e.touches[0].clientX - startX;
-    const content = currentRow.querySelector('.row-content');
-
-    // Detect direction & prevent accidental triggers
-    if (Math.abs(diffX) > 10) isSwiping = true;
-
-    // Move left = open
-    if (diffX < -40) {
-        document.querySelectorAll('.row-content.swiped').forEach(r => {
-        if (r !== content) r.classList.remove('swiped');
-        });
-        content.classList.add('swiped');
-    }
-
-    // Move right = close
-    if (diffX > 40) {
-        content.classList.remove('swiped');
-    }
-});
-
-// Touch end (finger lifted)
-document.addEventListener('touchend', () => {
-    currentRow = null;
-    isSwiping = false;
-});
-
-// Click outside closes all rows
-document.addEventListener('click', e => {
-    if (!e.target.closest('.swipe-row')) {
-        document
-        .querySelectorAll('.row-content.swiped')
-        .forEach(r => r.classList.remove('swiped'));
-    }
-});
-
-function createTable(expenses) {
-    if (!expenses || expenses.length === 0) {
-        const message = 'No expenses recorded for this month';
-        return `<div class="no-data">${message}</div>`;
-    }
-    // Aggregate by day
-    if (disabledCategories.size !== 0){
-        expenses = expenses.filter(expense => disabledCategories.has(expense.category))
-    }
-    const aggregated = expenses.reduce((acc, expense) => {
-        const date = new Date(expense.date).toISOString().split('T')[0]; // "YYYY-MM-DD"
-        if (!acc[date]) acc[date] = [];
-        acc[date].push(expense);
-        return acc;
-    }, {});
-
-    return `
-        <table class="expense-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            ${
-                Object.keys(aggregated)
-                .sort()
-                .reverse()
-                .map((date) => {
-                    // Optional: display the date as a header
-                    const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(
-                    date
-                    )
-                    .slice(0, 6)
-                    .replace(",", "")}</td>`;
-
-                    // Map over each expense for this date
-                    const rows = aggregated[date]
-                    .map(expense => `
-                    <tr class="swipe-row" onclick="toggleSlide(event, this)">
-                    <td colspan="4" style="padding: 0;">
-                        <div class="row-container">
-                        <div class="row-content">
-                            <table style="width: 100%; table-layout: fixed;">
-                            <tr>
-                                <td style="text-align: center; width: 10%;">
-                                ${
-                                    expense.user === "wescules"
-                                    ? `<img src="assets/wes.webp" class="circle-img">`
-                                    : `<img src="assets/abbie.webp" class="circle-img">`
-                                }
-                                </td>
-                                <td style="width: 65%; padding-left: 15px">
-                                <div>${escapeHTML(expense.name)}</div>
-                                <div style="color: ${
-                                    categoryColors[expense.category]
-                                };">
-                                    ${escapeHTML(expense.category)}
-                                </div>
-                                </td>
-                                <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap; width: 25%;">
-                                ${formatCurrencyInTable(
-                                    expense.amount,
-                                    expense.currency
-                                )}
-                                </td>
-                            </tr>
-                            </table>
-                        </div>
-
-                        <!-- Hidden buttons revealed on swipe -->
-                        <div class="row-actions">
-                            <button class="edit-button" onclick="editExpenseById(event, '${
-                                expense.id
-                            }')">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button class="delete-button" onclick="handleDeleteClick(event, '${
-                                expense.id
-                            }')">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                        </div>
-                    </td>
-                    </tr>
-                    `
-                    )
-                    .join(""); // join all rows for this date
-
-                    return dateHeader + rows; // combine header + rows
-                })
-                .join("") // join all dates together
-            }
-
-            </tbody>
-        </table>
-    `;
-}
-
-document.getElementById('updateBtn').addEventListener('click', async (e) => {
-    e.preventDefault();
-    const form = document.getElementById('updateExpenseForm');
-    form.reportValidity();
-    if (!form.checkValidity()) {
-        form.reportValidity();
-    }else{
-        await updateExpenseForm(e);
-    }
-});
 
 function editExpenseById(event, expenseId) {
     event.preventDefault();
@@ -471,158 +183,6 @@ function calculateExpenses(expenses) {
         .filter(exp => exp.amount < 0).reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
 }
 
-function updateChartAndLegend() {
-    const monthExpenses = getMonthExpenses(allExpenses);
-    const chartBox = document.querySelector('.chart-box');
-    const legendBox = document.getElementById('customLegend');
-    const cashflowSection = document.getElementById('cashflow-section');
-    const noDataMessage = document.getElementById('noDataMessage');
-    const hasExpenses = monthExpenses.some(e => e.amount < 0);
-    if (!hasExpenses) {
-        if (chart) {
-            chart.destroy();
-            chart = null;
-        } 
-        chartBox.style.display = 'none';
-        legendBox.style.display = 'none';
-        cashflowSection.style.display = 'none';
-        noDataMessage.style.display = 'block';
-    } else {
-        chartBox.style.display = 'flex';
-        legendBox.style.display = 'flex';
-        cashflowSection.style.display = 'flex';
-        noDataMessage.style.display = 'none';
-        categoryData = calculateCategoryBreakdown(monthExpenses);
-        updateCashflow(monthExpenses);
-        renderChartType(currentlySelectedChart, true);
-        updateLegend();
-    }
-}
-
-
-function updateCashflow(expenses) {
-    const income = calculateIncome(expenses);
-    const expenseTotal = calculateExpenses(expenses);
-    const balance = income - expenseTotal;
-    document.getElementById('cashflow-income').textContent = formatCurrency(income);
-    document.getElementById('cashflow-expenses').textContent = formatCurrency(expenseTotal);
-    document.getElementById('cashflow-balance').textContent = formatCurrency(balance);
-    const balanceElement = document.getElementById('cashflow-balance');
-    if (balance >= 0) {
-        balanceElement.classList.add('positive');
-        balanceElement.classList.remove('negative');
-    } else {
-        balanceElement.classList.add('negative');
-        balanceElement.classList.remove('positive');
-    }
-}
-
-function createPieChart() {
-    if (chart) {
-        chart.destroy();
-    }
-    currentlySelectedChart = 'pie';
-
-    chart = new Chart('chartCanvas', {
-        type: 'doughnut',
-        data: {
-            labels: categoryData.map(c => c.category),
-            datasets: [{
-                data: categoryData.map(c => c.total),
-                backgroundColor: categoryData.map(c => categoryColors[c.category]),
-                borderColor: '#1a1a1a',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => {
-                            const value = context.raw;
-                            const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                            return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-function isEnabledCategory(category) {
-    return disabledCategories.size !== 0 ? disabledCategories.has(category) : !disabledCategories.has(category)
-}
-
-function updateLegend() {
-    const legendContainer = document.getElementById('customLegend');
-    legendContainer.innerHTML = '';
-    const monthExpenses = getMonthExpenses(allExpenses);
-    const currentMonthCategories = [...new Set(monthExpenses
-        .filter(exp => exp.amount < 0).map(exp => exp.category))];
-    const categoryMap = new Map(categoryData.map(cat => [cat.category, cat]));
-
-    currentMonthCategories.sort((a, b) => {
-        const dataA = categoryMap.get(a);
-        const dataB = categoryMap.get(b);
-        if (dataA && dataB) return dataB.total - dataA.total;
-        if (dataA) return -1;
-        if (dataB) return 1;
-        return a.localeCompare(b);
-    }).forEach(category => {
-        const item = document.createElement('div');
-        item.className = `legend-item${disabledCategories.has(category) ? ' disabled' : ''}`;
-        const color = categoryColors[category];
-        const categoryDataItem = categoryMap.get(category);
-        const percentage = categoryDataItem ? ` (${categoryDataItem.percentage.toFixed(1)}%)` : '';
-        const amount = categoryDataItem ? formatCurrency(categoryDataItem.total) : '';
-        item.innerHTML = `
-            <div class="color-box" style="background-color: ${color}"></div>
-            <div class="legend-text">
-                <span>${category}${percentage}</span>
-                <span class="amount">${amount}</span>
-            </div>
-            `;
-        item.addEventListener('click', () => toggleCategory(category));
-        legendContainer.appendChild(item);
-    });
-
-    const activeTotalExpenses = monthExpenses
-        .filter(exp => exp.amount < 0 && isEnabledCategory(exp.category)).reduce((sum, exp) => sum +
-            convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
-
-    activeTotalExpensesCount = monthExpenses
-        .filter(exp => exp.amount < 0 && isEnabledCategory(exp.category)).length
-
-    const totalsHtml = `
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Total <lmao style="font-size: x-small">(${activeTotalExpensesCount} expenses)</lmao></span>
-                        <span class="amount">
-                            ${formatCurrency(activeTotalExpenses)}
-                        </span>
-                    </div>
-                </div>
-                `;
-    legendContainer.insertAdjacentHTML('beforeend', totalsHtml);
-}
-
-function toggleCategory(category) {
-    if (disabledCategories.has(category)) {
-        disabledCategories.delete(category);
-    } else {
-        disabledCategories.add(category);
-    }
-    updateLegend();
-    updateTable();
-}
-
 function populateCategoryDropDown(categories) {
     try {
         const categorySelect = document.getElementById('category');
@@ -644,208 +204,6 @@ function populateCategoryDropDown(categories) {
     }
 }
 
-function createTransactionTable() {
-    if (!allTransactions || allTransactions.length === 0) {
-        return `<div class="no-data">No transactions found</div>`;
-    }
-    allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date))
-    
-    const aggregated = allTransactions.reduce((acc, transaction) => {
-        const chinaTimeOffset = new Date(transaction.date).getTime()+ 8 * 60 * 60 * 1000; // China time
-        // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
-        const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
-
-        if (!acc[localDate]) acc[localDate] = [];
-        acc[localDate].push(transaction);
-        return acc;
-    }, {});
-    return `
-        <table class="expense-table">
-            <thead>
-                <tr>
-                </tr>
-            </thead>
-            <tbody>
-
-                ${Object.keys(aggregated)
-                    .sort()
-                    .reverse()
-                    .map(date => {
-                        // Optional: display the date as a header
-                        const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(date).slice(0, 6).replace(',', '')}</td>`;
-
-                        // Map over each expense for this date
-                        const rows = aggregated[date]
-                        .map(transaction => `
-                            <tr>
-                            <td style="text-align: center">
-                                ${transaction.user === 'wescules'
-                                ? `<img src="assets/wes.webp" class="circle-img">`
-                                : `<img src="assets/abbie.webp" class="circle-img">`
-                                }
-                            </td>
-                            <td>
-                                <lmao style="color: ${transaction.transactionType === 'create' ? '#8AC926' :transaction.transactionType === 'update'? 'goldenrod' : '#e74c3c'}">
-                                    ${transaction.transactionType.charAt(0).toUpperCase() + transaction.transactionType.slice(1)}d
-                                </lmao>${escapeHTML(transaction.name)}
-                            </td> 
-                            <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap;">${formatCurrencyInTable(transaction.amount, transaction.currency)}</td>
-                            </tr>
-                        `)
-                        .join('');
-
-                        return dateHeader + rows; // combine header + rows
-                    })
-                    .join('')
-                }
-            </tbody>
-        </table>
-    `;
-}
-
-
-async function initialize() {
-    document.getElementById("pie").classList.add("active")
-    document.getElementById("bar").classList.remove("active")
-    document.getElementById("calendar").classList.remove("active")
-
-    const currencySelect = document.getElementById("currency");
-
-    // Load from localStorage
-    const cachedCurrency = localStorage.getItem("userConfig") ? JSON.parse(localStorage.getItem("userConfig")).defaultInputCurrency : null;
-    if (cachedCurrency) {
-        currencySelect.value = cachedCurrency; // set dropdown
-    }
-    
-    try {
-        const cachedTransactions = localStorage.getItem('transactions');
-        const tableContainer = document.getElementById('tableHistoryContainer');
-        if (cachedTransactions) {
-            allTransactions = JSON.parse(cachedTransactions);
-            tableContainer.innerHTML = createTransactionTable();
-        }
-
-        let cachedCategories = localStorage.getItem("allCategories")
-        if (cachedCategories) {
-            populateCategoryDropDown(cachedCategories);
-            renderCategories(JSON.parse(cachedCategories).categories)
-        }
-
-        const cachedExpenses = localStorage.getItem('allExpenses');
-        if (cachedExpenses) {
-            allExpenses = JSON.parse(cachedExpenses);
-            const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
-            assignCategoryColors(uniqueCategories);
-            updateMonthDisplay();
-            updateChartAndLegend();
-            updateTable();
-            switchToDashboard();
-        }
-
-        const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
-        await Promise.all([renderCategories(categories.categories), populateCurrencySelect()]);
-        if (!data) throw new Error('Failed to fetch expenses');
-        allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
-        allTransactions = Array.isArray(transactions) ? transactions : (transactions && Array.isArray(transactions.expenses) ? transactions.expenses : []);
-        categories_settings = JSON.parse(cachedCategories).categories
-
-        const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
-        populateCategoryDropDown(categories);
-        assignCategoryColors(uniqueCategories);
-        updateMonthDisplay();
-        updateChartAndLegend();
-        updateTable();
-        tableContainer.innerHTML = createTransactionTable(allTransactions)
-        if (document.getElementById('dashboardNav').classList.contains('active')) {
-            switchToDashboard()
-        } else if(document.getElementById('historyNav').classList.contains('active')){
-            switchToTransactions()
-        } else if(document.getElementById('settingsNav').classList.contains('active')){
-            switchToSettings()
-        }
-    } catch (error) {
-        console.error('Failed to initialize dashboard:', error);
-    }
-}
-
-function drawExpenseChart() {
-    if (chart) {
-        chart.destroy();
-    }
-    currentlySelectedChart = 'bar';
-    const ctx = document.getElementById("chartCanvas").getContext("2d");
-    if (!allExpenses || allExpenses.length === 0) {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        return;
-    }
-    const year1 = currentDate.getFullYear();
-    const month1 = currentDate.getMonth();
-    const allDays = getDaysInMonth(year1, month1);
-
-    // Step 2: Aggregate expenses per day
-    const expensesByDay = {};
-    const convertCurrencyTo = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo;
-    allExpenses.forEach((exp) => {
-        const day = exp.date.split("T")[0];
-        const amount = convertCurrency(
-            Math.abs(exp.amount),
-            exp.currency,
-            convertCurrencyTo
-        );
-        expensesByDay[day] = (expensesByDay[day] || 0) + amount;
-    });
-
-    if (Object.keys(expensesByDay).length === 0) {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        return;
-    }
-
-    // Step 3: Prepare dataset with zeros for missing days
-    const data = allDays.map((day) => expensesByDay[day] || 0);
-
-    // Step 4: Chart.js
-    chart = new Chart(ctx, {
-    type: "bar",
-    data: {
-        labels: allDays,
-        datasets: [
-        {
-            label: "Daily Expenses",
-            data: data,
-            backgroundColor: "#8338EC",
-        },
-        ],
-    },
-    options: {
-        plugins: {
-            title: {
-                display: false
-            }
-        },
-        scales: {
-        x: {
-            type: "time",
-            time: {
-            unit: "day", // your data is daily
-            tooltipFormat: "MMM d", // tooltip shows e.g., Oct 1
-            displayFormats: {
-                day: "MMM d", // x-axis label shows e.g., Oct 1
-            },
-            },
-            grid: {
-            drawOnChartArea: false, // hides vertical grid lines
-            drawTicks: true, // optional, keeps tick marks
-            },
-            ticks: {
-            autoSkip: true,
-            maxTicksLimit: 5,
-            },
-        }, // show all dates
-        y: { beginAtZero: true },
-        },
-    },
-    });
-}
 // Step 1: Generate all dates of the month
 function getDaysInMonth(year, month) {
     const dates = [];
@@ -860,10 +218,6 @@ function getDaysInMonth(year, month) {
     return dates;
 
 }
-
-Chart.defaults.color = '#b3b3b3';
-Chart.defaults.borderColor = '#606060';
-Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
 document.getElementById('prevMonth').addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
@@ -893,6 +247,12 @@ document.getElementById('name_custom').addEventListener('input', function (e) {
     }
 });
 
+document.getElementById('deleteModal').addEventListener('click', (e) => {
+    if (e.target.className === 'modal active') {
+        closeDeleteModal();
+    }
+});
+
 document.getElementById('saveBtn').addEventListener('click', async (e) => {
     e.preventDefault();
     const form = document.getElementById('expenseForm');
@@ -901,6 +261,17 @@ document.getElementById('saveBtn').addEventListener('click', async (e) => {
         form.reportValidity();
     }else{
         await submitExpenseForm(e);
+    }
+});
+
+document.getElementById('updateBtn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const form = document.getElementById('updateExpenseForm');
+    form.reportValidity();
+    if (!form.checkValidity()) {
+        form.reportValidity();
+    }else{
+        await updateExpenseForm(e);
     }
 });
 
@@ -952,12 +323,6 @@ async function confirmDelete() {
         alert('Failed to delete expense. Please try again.');
     }
 }
-
-document.getElementById('deleteModal').addEventListener('click', (e) => {
-    if (e.target.className === 'modal active') {
-        closeDeleteModal();
-    }
-});
 
 async function submitExpenseForm(event) {
     event.preventDefault();
@@ -1073,14 +438,72 @@ async function updateExpenseForm(event) {
     }
 }
 
+async function initialize() {
+    document.getElementById("pie").classList.add("active")
+    document.getElementById("bar").classList.remove("active")
+    document.getElementById("calendar").classList.remove("active")
+
+    const currencySelect = document.getElementById("currency");
+
+    // Load from localStorage
+    const cachedCurrency = localStorage.getItem("userConfig") ? JSON.parse(localStorage.getItem("userConfig")).defaultInputCurrency : null;
+    if (cachedCurrency) {
+        currencySelect.value = cachedCurrency; // set dropdown
+    }
+    
+    try {
+        const cachedTransactions = localStorage.getItem('transactions');
+        const tableContainer = document.getElementById('tableHistoryContainer');
+        if (cachedTransactions) {
+            allTransactions = JSON.parse(cachedTransactions);
+            tableContainer.innerHTML = createTransactionTable();
+        }
+
+        let cachedCategories = localStorage.getItem("allCategories")
+        if (cachedCategories) {
+            populateCategoryDropDown(cachedCategories);
+            renderCategories(JSON.parse(cachedCategories).categories)
+        }
+
+        const cachedExpenses = localStorage.getItem('allExpenses');
+        if (cachedExpenses) {
+            allExpenses = JSON.parse(cachedExpenses);
+            const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
+            assignCategoryColors(uniqueCategories);
+            updateMonthDisplay();
+            updateChartAndLegend();
+            updateTable();
+            switchToDashboard();
+        }
+
+        const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
+        await Promise.all([renderCategories(categories.categories), populateCurrencySelect()]);
+        if (!data) throw new Error('Failed to fetch expenses');
+        allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
+        allTransactions = Array.isArray(transactions) ? transactions : (transactions && Array.isArray(transactions.expenses) ? transactions.expenses : []);
+        categories_settings = JSON.parse(cachedCategories).categories
+
+        const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
+        populateCategoryDropDown(categories);
+        assignCategoryColors(uniqueCategories);
+        updateMonthDisplay();
+        updateChartAndLegend();
+        updateTable();
+        tableContainer.innerHTML = createTransactionTable(allTransactions)
+        if (document.getElementById('dashboardNav').classList.contains('active')) {
+            switchToDashboard()
+        } else if(document.getElementById('historyNav').classList.contains('active')){
+            switchToTransactions()
+        } else if(document.getElementById('settingsNav').classList.contains('active')){
+            switchToSettings()
+        }
+    } catch (error) {
+        console.error('Failed to initialize dashboard:', error);
+    }
+}
+
 function closeUpdateExpenseModal() {
     document.getElementById('updateExpenseModal').classList.remove('active');
 }
 
 document.addEventListener('DOMContentLoaded', initialize);
-
-document.getElementById('name_custom').addEventListener('click', (e) => {
-    if (e.target.value === '-') {
-        e.target.value = '';
-    }
-});
