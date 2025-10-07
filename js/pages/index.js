@@ -477,7 +477,6 @@ async function initialize() {
         }
 
         const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
-        await Promise.all([renderCategories(categories.categories), populateCurrencySelect()]);
         if (!data) throw new Error('Failed to fetch expenses');
         allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
         allTransactions = Array.isArray(transactions) ? transactions : (transactions && Array.isArray(transactions.expenses) ? transactions.expenses : []);
@@ -490,6 +489,7 @@ async function initialize() {
         updateChartAndLegend();
         updateTable();
         tableContainer.innerHTML = createTransactionTable(allTransactions)
+        await Promise.all([renderCategories(categories.categories), populateCurrencySelect()]);
         if (document.getElementById('dashboardNav').classList.contains('active')) {
             switchToDashboard()
         } else if(document.getElementById('historyNav').classList.contains('active')){
