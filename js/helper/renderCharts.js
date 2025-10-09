@@ -36,17 +36,6 @@ function renderChartType(type, forceRender = false) {
     }
 }
 
-function getPriceRangeForCalendar(){
-    if (currentCurrency == 'usd'){
-        return [0, 500]
-    }
-    else if (currentCurrency === 'cny'){
-        return [0, 3500]
-    }else if (currentCurrency === 'inr'){
-        return [0, 44000]
-    }
-}
-
 function createCalendarView() {
     if (chart) {
         chart.destroy();
@@ -56,6 +45,9 @@ function createCalendarView() {
     document.getElementById('chartCanvas').style.visibility = 'hidden';
 
     let spendingData = [];
+    let minExpense = 1000000;
+    let maxExpense = 0;
+
     allExpenses.forEach((exp) => {
         const day = exp.date.split("T")[0];
         const amount = convertCurrency(
@@ -64,9 +56,10 @@ function createCalendarView() {
         currentCurrency
         );
         spendingData.push({ date: day, value: amount });
+        minExpense = Math.min(minExpense, amount);
+        maxExpense = Math.max(maxExpense, amount);
     });
     
-
     const cal = new CalHeatmap();
     cal.paint(
         {
@@ -94,10 +87,9 @@ function createCalendarView() {
         },
         scale: {
             color: {
-            range: ['green', 'red'],
-            type: "linear",
-            interpolate: "hsl",
-            domain: getPriceRangeForCalendar(),
+                range: ["#FFF9C4", "#F44336"],
+                type: "linear",
+                domain: [minExpense, maxExpense],
             },
         },
         legend: [50, 100, 150, 200, 250],
