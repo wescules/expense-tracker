@@ -108,7 +108,7 @@ async function loginUser(username, password) {
         const usersRef = collection(db, CONFIG_COLLECTION);
         const q = query(usersRef,
             where("username", "==", username),
-            where("password", "==", password) // Again, highly insecure for real passwords!
+            where("password", "==", password)
         );
 
         const querySnapshot = await getDocs(q);
