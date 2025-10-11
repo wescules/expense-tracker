@@ -355,7 +355,6 @@ async function submitExpenseForm(event) {
             messageDiv.textContent = 'Expense added successfully!';
             messageDiv.className = 'form-message success';
             document.getElementById('expenseForm').reset();
-            document.getElementById('addExpenseModal').classList.remove('active');
             await initialize();
             const today = new Date();
             const year = today.getFullYear();
@@ -442,30 +441,30 @@ async function initialize() {
     document.getElementById("pie").classList.add("active")
     document.getElementById("bar").classList.remove("active")
     document.getElementById("calendar").classList.remove("active")
-
-    const currencySelect = document.getElementById("currency");
-
-    // Load from localStorage
-    const cachedCurrency = localStorage.getItem("userConfig") ? JSON.parse(localStorage.getItem("userConfig")).defaultInputCurrency : null;
-    if (cachedCurrency) {
-        currencySelect.value = cachedCurrency; // set dropdown
-    }
     
     try {
+        const cachedCurrency = localStorage.getItem("userConfig") ? JSON.parse(localStorage.getItem("userConfig")).defaultInputCurrency : null;
         const cachedTransactions = localStorage.getItem('transactions');
+        const cachedCategories = localStorage.getItem("allCategories");
+        const cachedExpenses = localStorage.getItem('allExpenses');
+
         const tableContainer = document.getElementById('tableHistoryContainer');
+        const currencySelect = document.getElementById("currency");
+
+        if (cachedCurrency) {
+            currencySelect.value = cachedCurrency; // set dropdown
+        }
+
         if (cachedTransactions) {
             allTransactions = JSON.parse(cachedTransactions);
             tableContainer.innerHTML = createTransactionTable();
         }
 
-        let cachedCategories = localStorage.getItem("allCategories")
         if (cachedCategories) {
             populateCategoryDropDown(cachedCategories);
             renderCategories(JSON.parse(cachedCategories).categories)
         }
 
-        const cachedExpenses = localStorage.getItem('allExpenses');
         if (cachedExpenses) {
             allExpenses = JSON.parse(cachedExpenses);
             const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
