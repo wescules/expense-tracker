@@ -97,13 +97,20 @@ function createTable(expenses) {
                 Object.keys(aggregated)
                 .sort()
                 .reverse()
-                .map((date) => {
+                .map((date, index) => {
                     // Optional: display the date as a header
-                    const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">${formatDateFromUTC(
-                    date
-                    )
-                    .slice(0, 6)
-                    .replace(",", "")}</td>`;
+                    const dateHeader = `<td colspan="5" style="text-align: left;font-weight:bold;background-color: var(--bg-primary);">
+                    <div style="display: flex; align-items: center;">
+                        <span>${formatDateFromUTC(date).slice(0, 6).replace(",", "")}</span>
+                        ${index === 0 ? 
+                        `<select class='currencyConverter' id="currencyConverter">
+                            <option value="none">-</option>
+                            <option value="usd">$ USD</option>
+                            <option value="cny">¥ CNY</option>
+                            <option value="inr">₹ INR</option>
+                        </select>` : ''}
+                    </div>
+                    </td>`;
 
                     // Map over each expense for this date
                     const rows = aggregated[date]
@@ -130,10 +137,7 @@ function createTable(expenses) {
                                 </div>
                                 </td>
                                 <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap; width: 25%;">
-                                ${formatCurrencyInTable(
-                                    expense.amount,
-                                    expense.currency
-                                )}
+                                ${formatCurrencyInTable(expense.amount, expense.currency)}
                                 </td>
                             </tr>
                             </table>
