@@ -155,30 +155,32 @@ function updateTable() {
     const tableContainer = document.getElementById('tableContainer');
     tableContainer.innerHTML = createTable(expensesForTable);
 
-    const tds = tableContainer.querySelectorAll('td.amount');
-    tds.forEach(td => {
-        td.dataset.original = td.textContent.trim();
-    });
-
-    document.getElementById('currencyConverter').addEventListener('change', (event) => {
-        convertTableCurrency = event.target.value;
-
-        const container = document.getElementById('tableContainer');
-        container.querySelectorAll('td.amount').forEach(td => {
-            if (event.target.value == 'none'){
-                td.textContent = td.dataset.original;
-            }
-            else{
-                let value = td.textContent.trim();
-                const originalCurrency = value.charAt(1) === '$' ? 'usd' : value.charAt(1) === '¥' ? 'cny' : 'inr';
-                value = value.replace('$', '').replace("¥", '').replace("₹", '').replace(',', '');
-
-                const oldValue = parseFloat(value);
-                td.textContent = '-' + formatCurrencyInTable(convertCurrency(Math.abs(oldValue), originalCurrency, event.target.value), event.target.value); 
-            }
+    if (document.getElementById("currencyConverter")) {
+        const tds = tableContainer.querySelectorAll('td.amount');
+        tds.forEach(td => {
+            td.dataset.original = td.textContent.trim();
         });
 
-    });
+        document.getElementById('currencyConverter').addEventListener('change', (event) => {
+            convertTableCurrency = event.target.value;
+
+            const container = document.getElementById('tableContainer');
+            container.querySelectorAll('td.amount').forEach(td => {
+                if (event.target.value == 'none'){
+                    td.textContent = td.dataset.original;
+                }
+                else{
+                    let value = td.textContent.trim();
+                    const originalCurrency = value.charAt(1) === '$' ? 'usd' : value.charAt(1) === '¥' ? 'cny' : 'inr';
+                    value = value.replace('$', '').replace("¥", '').replace("₹", '').replace(',', '');
+
+                    const oldValue = parseFloat(value);
+                    td.textContent = '-' + formatCurrencyInTable(convertCurrency(Math.abs(oldValue), originalCurrency, event.target.value), event.target.value); 
+                }
+            });
+
+        });
+    }
 
 }
 
