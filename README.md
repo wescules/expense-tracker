@@ -10,13 +10,16 @@
 This project was meant to be private but I'm using Github Pages to host for free. The FireStore config is meant to be public.
 # Run locally
 
-Clone the repo locally:
+1) Clone the repo locally:
 ```git clone https://github.com/wescules/expense-tracker.git```
 
-Start up a server:
+2) Change directory to expense-tracker:
+```cd expense-tracker```
+
+3) Start up a server:
 ```python -m http.server 8000```
 
-Open browser:
+4) Open browser:
 ```http://localhost:8000/index.html```
 
 # Screenshots
