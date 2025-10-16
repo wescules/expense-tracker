@@ -8,6 +8,16 @@
 [![Code Style](https://img.shields.io/badge/code%20style-black-black.svg)](https://github.com/psf/black)
 
 This project was meant to be private but I'm using Github Pages to host for free. The FireStore config is meant to be public.
+# Run locally
+
+Clone the repo locally:
+```git clone https://github.com/wescules/expense-tracker.git```
+
+Start up a server:
+```python -m http.server 8000```
+
+Open browser:
+```http://localhost:8000/index.html```
 
 # Screenshots
 
