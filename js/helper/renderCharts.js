@@ -294,7 +294,11 @@ function updateLegend() {
         return a.localeCompare(b);
     }).forEach(category => {
         const item = document.createElement('div');
-        item.className = `legend-item${disabledCategories.has(category) ? ' disabled' : ''}`;
+
+        const isDisabled = disabledCategories.has(category);
+        const hasAnyDisabled = disabledCategories.size > 0;
+        item.className = `legend-item${isDisabled ? ' disabled' : hasAnyDisabled ? ' enabled' : ''}`;
+
         const color = categoryColors[category];
         const categoryDataItem = categoryMap.get(category);
         const percentage = categoryDataItem ? ` (${categoryDataItem.percentage.toFixed(1)}%)` : '';

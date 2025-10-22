@@ -201,6 +201,15 @@ header {
     user-select: none;
 }
 
+.legend-item.enabled .legend-text {
+    opacity: 0.5;
+}
+
+.legend-item.enabled .color-box {
+    background-color: #808080 !important;
+    position: relative;
+}
+
 .legend-item.disabled .color-box {
     position: relative;
 }
