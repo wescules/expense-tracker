@@ -508,7 +508,7 @@ async function initialize() {
         if (!data) throw new Error('Failed to fetch expenses');
         allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
         allTransactions = Array.isArray(transactions) ? transactions : (transactions && Array.isArray(transactions.expenses) ? transactions.expenses : []);
-        categories_settings = JSON.parse(cachedCategories).categories
+        categories_settings = categories.categories
 
         const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
         populateCategoryDropDown(categories);
