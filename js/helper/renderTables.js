@@ -180,9 +180,7 @@ function createTransactionTable() {
     allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date))
     
     const aggregated = allTransactions.reduce((acc, transaction) => {
-        const chinaTimeOffset = new Date(transaction.date).getTime()+ 8 * 60 * 60 * 1000; // China time
-        // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
-        const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+        const localDate = getLocaleDate(new Date(transaction.date));
 
         if (!acc[localDate]) acc[localDate] = [];
         acc[localDate].push(transaction);

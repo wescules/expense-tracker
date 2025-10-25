@@ -34,9 +34,6 @@ const username = localStorage.getItem('loggedInUsername');
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-
-// Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
 function getCachedCategories() {
@@ -197,11 +194,15 @@ async function getAllExpensesAndTransactions() {
   }
 }
 
+function getLocaleDate(date=new Date()) {
+    const chinaTimeOffset = date.getTime() + 8 * 60 * 60 * 1000; // China time
+    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
+    return new Date(chinaTimeOffset).toISOString().split('T')[0];
+}
+
 async function addTransaction(transactionType, description, amount, category, currency) {
     console.log("saving transaction")
-    const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
-    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
-    const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+    const localDate = getLocaleDate();
 
     return await addDoc(collection(db, TRANSACTION_COLLECTION), {
             name: description,
@@ -216,9 +217,7 @@ async function addTransaction(transactionType, description, amount, category, cu
 
 async function addExpense(formData) {
     try {
-        const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
-         // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
-        const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+        const localDate = getLocaleDate();
 
         const transactionType = 'create';
         const [docRef, newTransaction] = await Promise.all([
@@ -242,9 +241,7 @@ async function addExpense(formData) {
 
 // Function to update an expense
 async function updateExpense(documentId, updatedFields) {
-    const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
-    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
-    const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+    const localDate = getLocaleDate();
 
     const expenseRef = doc(db, EXPENSES_COLLECTION, documentId);
     let expenseDoc = await getDoc(expenseRef);
@@ -265,9 +262,7 @@ async function updateExpense(documentId, updatedFields) {
 
 // Function to delete an expense
 async function deleteExpense(documentId) {
-    const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
-    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
-    const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+    const localDate = getLocaleDate();
 
     const expenseRef = doc(db, EXPENSES_COLLECTION, documentId);
     let expenseDoc = await getDoc(expenseRef);
@@ -292,3 +287,4 @@ window.getAllCategories = getAllCategories;
 window.updateCategories = updateCategories;
 window.updateUserConfig = updateUserConfig;
 window.getAllExpensesAndTransactions = getAllExpensesAndTransactions;
+window.getLocaleDate = getLocaleDate;
