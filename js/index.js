@@ -13,13 +13,6 @@ let categories_settings = [];
 let convertTableCurrency = 'none';
 
 function switchToTransactions() {
-    const historyNav = document.getElementById('historyNav')
-    historyNav.classList.add('active')
-    const dashboardNav = document.getElementById('dashboardNav')
-    dashboardNav.classList.remove('active')
-    const settingsNav = document.getElementById('settingsNav')
-    settingsNav.classList.remove('active')
-
     const tableHistoryContainer = document.getElementById('tableHistoryContainer')
     tableHistoryContainer.style.display = 'flex';
 
@@ -43,14 +36,6 @@ function switchToTransactions() {
 }
 
 function switchToSettings() {
-    const historyNav = document.getElementById('historyNav')
-    historyNav.classList.remove('active')
-    const dashboardNav = document.getElementById('dashboardNav')
-    dashboardNav.classList.remove('active')
-    const settingsNav = document.getElementById('settingsNav')
-    settingsNav.classList.add('active')
-    
-
     const tableHistoryContainer = document.getElementById('tableHistoryContainer')
     tableHistoryContainer.style.display = 'none';
 
@@ -75,13 +60,6 @@ function switchToSettings() {
 }
 
 function switchToDashboard() {
-    const historyNav = document.getElementById('historyNav')
-    historyNav.classList.remove('active')
-    const dashboardNav = document.getElementById('dashboardNav')
-    dashboardNav.classList.add('active')
-    const settingsNav = document.getElementById('settingsNav')
-    settingsNav.classList.remove('active')
-
     const tableHistoryContainer = document.getElementById('tableHistoryContainer')
     tableHistoryContainer.style.display = 'none';
 
@@ -518,11 +496,11 @@ async function initialize() {
         updateTable();
         tableContainer.innerHTML = createTransactionTable(allTransactions)
         await Promise.all([renderCategories(categories.categories), populateCurrencySelect()]);
-        if (document.getElementById('dashboardNav').classList.contains('active')) {
+        if (document.getElementById('dashboardNav').checked) {
             switchToDashboard()
-        } else if(document.getElementById('historyNav').classList.contains('active')){
+        } else if (document.getElementById('historyNav').checked) {
             switchToTransactions()
-        } else if(document.getElementById('settingsNav').classList.contains('active')){
+        } else if (document.getElementById('settingsNav').checked) {
             switchToSettings()
         }
     } catch (error) {

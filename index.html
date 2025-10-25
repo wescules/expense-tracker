@@ -43,15 +43,20 @@
                     <img src="pwa/icon-192.png" alt="ExpenseOwl Logo" height="85"
                         style="vertical-align: middle; margin-right: 20px;" fetchpriority="high">
                 </a>
-                <a id="dashboardNav" class="view-button active" data-tooltip="Dashboard" onclick="switchToDashboard()">
+            <fieldset class="switcher">
+                <label class="switcher__option">
+                    <input id='dashboardNav' class="switcher__input" type="radio" name="theme" value="dim" c-option="1" checked onclick="switchToDashboard()"/>
                     <i class="fa-solid fa-chart-pie"></i>
-                </a>
-                <a id="historyNav" class="view-button" data-tooltip="History" onclick="switchToTransactions()">
-                    <i class="fa-solid fa-history" aria-hidden="true"></i>
-                </a>
-                <a id="settingsNav" class="view-button" data-tooltip="Settings" onclick="switchToSettings()">
+                </label>
+                <label class="switcher__option">
+                    <input id='historyNav' class="switcher__input" type="radio" name="theme" value="dark" c-option="2" onclick="switchToTransactions()" />
+                <i class="fa-solid fa-history" aria-hidden="true"></i>
+                </label>
+                <label class="switcher__option">
+                    <input id='settingsNav' class="switcher__input" type="radio" name="theme" value="dark" c-option="3" onclick="switchToSettings()"/>
                     <i class="fa-solid fa-gear"></i>
-                </a>
+                </label>
+            </fieldset>
             </div>
         </header>
 
@@ -305,7 +310,30 @@
             </div>
         </div>
     </div>
+    <script>
+        const switcher = document.querySelector('.switcher');
 
+        const trackPrevious = (el) => {
+            const radios = el.querySelectorAll('input[type="radio"]');
+            let previousValue = null;
+
+            const initiallyChecked = el.querySelector('input[type="radio"]:checked');
+            if (initiallyChecked) {
+                previousValue = initiallyChecked.getAttribute("c-option");
+                el.setAttribute('c-previous', previousValue);
+            }
+
+            radios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                if (radio.checked) {
+                    el.setAttribute('c-previous', previousValue ?? '');
+                    previousValue = radio.getAttribute("c-option");
+                }
+                });
+            });
+        }
+        trackPrevious(switcher);
+    </script>
     <script type="module" src="js/helper/database.js"></script>
     <script src="js/helper/functions.js"></script>
     <script src="js/helper/categoryPicker.js"></script>
