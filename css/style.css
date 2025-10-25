@@ -1225,7 +1225,7 @@ body:has(input[value="dim"]:checked) {
   height: 70px;
   box-sizing: border-box;
   padding: 8px 12px 10px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
   border: none;
   border-radius: 99em;
   font-size: var(--fz);
