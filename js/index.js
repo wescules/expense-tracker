@@ -504,10 +504,10 @@ async function initialize() {
             switchToDashboard();
         }
 
-        const [data, categories, transactions] = await Promise.all([getAllExpenses(), getAllCategories(), getAllTransactions()]);
-        if (!data) throw new Error('Failed to fetch expenses');
-        allExpenses = Array.isArray(data) ? data : (data && Array.isArray(data.expenses) ? data.expenses : []);
-        allTransactions = Array.isArray(transactions) ? transactions : (transactions && Array.isArray(transactions.expenses) ? transactions.expenses : []);
+        const [expensesAndTransactions, categories] = await Promise.all([getAllExpensesAndTransactions(), getAllCategories()]);
+        if (!expensesAndTransactions) throw new Error('Failed to fetch expenses');
+        allExpenses = Array.isArray(expensesAndTransactions.expenses) ? expensesAndTransactions.expenses : [];
+        allTransactions = Array.isArray(expensesAndTransactions.transactions) ? expensesAndTransactions.transactions : [];
         categories_settings = categories.categories
 
         const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];

@@ -5,7 +5,7 @@ import {
   collection,
   addDoc,
   updateDoc,
-  deleteDoc,
+  or,
   doc,
   getDocs,
   getDoc,
@@ -28,7 +28,7 @@ const firebaseConfig = {
 const EXPENSES_COLLECTION = "expenses_collection";
 const CONFIG_COLLECTION = "user_config_collection";
 const CATEGORY_COLLECTION = "category_collection";
-const TRANSACTION_COLLECTION = 'transaction_collection'
+const TRANSACTION_COLLECTION = 'transaction_collection';
 
 const username = localStorage.getItem('loggedInUsername');
 
@@ -136,27 +136,65 @@ async function loginUser(username, password) {
         throw error;
     }
 }
-async function getAllExpenses() {
-  try {
-    const querySnapshot = await getDocs(collection(db, EXPENSES_COLLECTION));
-    
-    let expenseList = [];
-    querySnapshot.forEach((doc) => {
-      const expense = doc.data();
-      expenseList.push({ id: doc.id, ...expense });
-    });
-    if (expenseList.length > 0){
-        localStorage.setItem('allExpenses', JSON.stringify(expenseList));
+
+function merge(cached, updates) {
+  let map = new Map(cached.map(e => [e.id, e]));
+  for (const u of updates) map.set(u.id, u);
+  map.forEach((value, key) => { {
+    if (value.deleted) map.delete(key);
+  }});
+  return Array.from(map.values());
+}
+
+async function getAll(localStorageName, collectionName, lastSyncKey) {
+    const cachedData = JSON.parse(localStorage.getItem(localStorageName)) || [];
+
+    try {
+    const lastSync = localStorage.getItem(lastSyncKey);
+    const lastSyncDate = lastSync ? new Date(lastSync) : new Date(0); // default: 1970
+    let q = query(
+        collection(db, collectionName),
+        localStorageName === 'allTransactions' ? 
+        where("date", ">", lastSyncDate.toISOString()) :
+        or(where("date", ">", lastSyncDate.toISOString()), where("updatedAt", ">", lastSyncDate.toISOString()))
+    );
+
+    const snap = await getDocs(q);
+    const updatedData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (updatedData.length > 0) {
+        console.log(`Fetched ${updatedData.length} updated records from Firestore.`);
+        // Merge changes into local cache
+        const merged = merge(cachedData, updatedData);
+
+        localStorage.setItem(localStorageName, JSON.stringify(merged));
+        localStorage.setItem(lastSyncKey, new Date().toISOString());
+        return merged;
+    } else {
+        console.log("No updates found — no reads wasted 👍");
+        return cachedData;
     }
-    return expenseList;
   } catch (error) {
     console.error("Error getting documents: ", error);
-    const cachedExpenses = localStorage.getItem('allExpenses')
-    if(cachedExpenses){
-        return JSON.parse(cachedExpenses)
+    if(cachedData){
+        return cachedData;
     }
   }
   return []; // Return an empty array in case of error
+}
+
+async function getAllExpensesAndTransactions() {
+  try {
+    const [allExpenses, allTransactions] = await Promise.all([
+        getAll('allExpenses', EXPENSES_COLLECTION, 'lastSyncExpenses'),
+        getAll('allTransactions', TRANSACTION_COLLECTION, 'lastSyncTransactions')
+    ]);
+    
+    return { expenses: allExpenses, transactions: allTransactions };
+  } catch (error) {
+    console.error("Error getting all expenses and transactions: ", error);
+    return { expenses: [], transactions: [] };
+  }
 }
 
 async function addTransaction(transactionType, description, amount, category, currency) {
@@ -176,41 +214,25 @@ async function addTransaction(transactionType, description, amount, category, cu
         });
 }
 
-async function getAllTransactions() {
-  try {
-    const querySnapshot = await getDocs(collection(db, TRANSACTION_COLLECTION));
-    
-    let transactionList = [];
-    querySnapshot.forEach((doc) => {
-      const transaction = doc.data();
-      transactionList.push({ id: doc.id, ...transaction });
-    });
-    if (transactionList.length > 0){
-        localStorage.setItem('transactions', JSON.stringify(transactionList));
-    }
-    return transactionList;
-  } catch (error) {
-    console.error("Error getting documents: ", error);
-    const cachedTransactions = localStorage.getItem('transactions')
-    if(cachedTransactions){
-        return JSON.parse(cachedTransactions)
-    }
-  }
-  return [];
-}
-
-
 async function addExpense(formData) {
     try {
+        const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
+         // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
+        const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+
         const transactionType = 'create';
-        const [docRef, newTransaction] = await Promise.all([addDoc(collection(db, EXPENSES_COLLECTION), {
-            name: formData.name,
-            amount: parseFloat(formData.amount),
-            date: formData.date,
-            category: formData.category,
-            currency: formData.currency,
-            user: username
-        }), addTransaction(transactionType, formData.name, parseFloat(formData.amount), formData.category, formData.currency)]);
+        const [docRef, newTransaction] = await Promise.all([
+            addDoc(collection(db, EXPENSES_COLLECTION), {
+                name: formData.name,
+                amount: parseFloat(formData.amount),
+                date: formData.date,
+                category: formData.category,
+                currency: formData.currency,
+                user: username,
+                updatedAt: getISODateWithLocalTime(localDate),
+            }),
+            addTransaction(transactionType, formData.name, parseFloat(formData.amount), formData.category, formData.currency)
+        ]);
         return docRef.id;
     } catch (e) {
         console.error("Error adding document: ", e);
@@ -220,6 +242,10 @@ async function addExpense(formData) {
 
 // Function to update an expense
 async function updateExpense(documentId, updatedFields) {
+    const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
+    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
+    const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+
     const expenseRef = doc(db, EXPENSES_COLLECTION, documentId);
     let expenseDoc = await getDoc(expenseRef);
     const transactionType = "update"
@@ -228,6 +254,7 @@ async function updateExpense(documentId, updatedFields) {
         console.log(expenseRef)
         await Promise.all([updateDoc(expenseRef, {
             ...updatedFields, // Spread the updated fields
+            updatedAt: getISODateWithLocalTime(localDate),
         }), addTransaction(transactionType, updatedFields.name, parseFloat(updatedFields.amount), updatedFields.category, expenseDoc.currency)])
         console.log("Document successfully updated!");
         return true;
@@ -238,19 +265,25 @@ async function updateExpense(documentId, updatedFields) {
 
 // Function to delete an expense
 async function deleteExpense(documentId) {
+    const chinaTimeOffset = new Date().getTime()+ 8 * 60 * 60 * 1000; // China time
+    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
+    const localDate = new Date(chinaTimeOffset).toISOString().split('T')[0];
+
     const expenseRef = doc(db, EXPENSES_COLLECTION, documentId);
     let expenseDoc = await getDoc(expenseRef);
     const transactionType = "delete"
     try {
         expenseDoc = expenseDoc.data()
-        await Promise.all([deleteDoc(expenseRef), addTransaction(transactionType, expenseDoc.name, parseFloat(expenseDoc.amount), expenseDoc.category, expenseDoc.currency)]);
+        await Promise.all([updateDoc(expenseRef, {
+            deleted: true,
+            updatedAt: getISODateWithLocalTime(localDate),
+        }), addTransaction(transactionType, expenseDoc.name, parseFloat(expenseDoc.amount), expenseDoc.category, expenseDoc.currency)]);
         console.log("Document successfully deleted!");
         return true;
     } catch (error) {
         console.error("Error removing document: ", error);
     }
 }
-window.getAllExpenses = getAllExpenses;
 window.addExpense = addExpense;
 window.updateExpense = updateExpense;
 window.deleteExpense = deleteExpense;
@@ -258,4 +291,4 @@ window.loginUser = loginUser;
 window.getAllCategories = getAllCategories;
 window.updateCategories = updateCategories;
 window.updateUserConfig = updateUserConfig;
-window.getAllTransactions = getAllTransactions;
+window.getAllExpensesAndTransactions = getAllExpensesAndTransactions;
