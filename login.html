@@ -271,30 +271,39 @@
     <script type="module" src="js/helper/database.js"></script>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); // Prevent default form submission
-
-    const authMessageDiv = document.getElementById('authMessage');
-    authMessageDiv.textContent = ''; // Clear previous messages
-
-    const email = document.getElementById('username').value;
-    const password = document.getElementById('loginPassword').value;
-
-    if (email && password) {
-        successful_login =  await loginUser(email, password);
-        if(successful_login){
-            document.getElementById('authMessage').textContent = `Welcome, ${successful_login.username}!`;
-            document.getElementById('loginForm').style.display = 'none';
-            window.location.replace("index.html");
-            await initialize(); // Load user-specific data after login
-        } else {
-            document.getElementById('authMessage').textContent = "Invalid email or password.";
-            document.getElementById('authMessage').style.color = "red";
-        }
-    } else {
-        document.getElementById('authMessage').textContent = "Please enter both email and password.";
+    async function hashString(message) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data); // or 'SHA-1', 'SHA-384', 'SHA-512'
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
     }
-});
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevent default form submission
+
+        const authMessageDiv = document.getElementById('authMessage');
+        authMessageDiv.textContent = ''; // Clear previous messages
+
+        const email = document.getElementById('username').value;
+        const password = await hashString(document.getElementById('loginPassword').value);
+
+        if (email && password) {
+            successful_login =  await loginUser(email, password);
+            if(successful_login){
+                document.getElementById('authMessage').textContent = `Welcome, ${successful_login.username}!`;
+                document.getElementById('loginForm').style.display = 'none';
+                window.location.replace("index.html");
+                await initialize(); // Load user-specific data after login
+            } else {
+                document.getElementById('authMessage').textContent = "Invalid email or password.";
+                document.getElementById('authMessage').style.color = "red";
+            }
+        } else {
+            document.getElementById('authMessage').textContent = "Please enter both email and password.";
+        }
+    });
 
 </script>
 </body>
