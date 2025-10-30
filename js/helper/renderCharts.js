@@ -49,6 +49,7 @@ function createCalendarView() {
     let maxExpense = 0;
 
     allExpenses.forEach((exp) => {
+        if (exp.amount >= 0) return;
         const day = exp.date.split("T")[0];
         const amount = convertCurrency(
         Math.abs(exp.amount),
@@ -216,6 +217,7 @@ function drawExpenseChart() {
     const expensesByDay = {};
     const convertCurrencyTo = JSON.parse(localStorage.getItem("userConfig")).convertCurrencyTo;
     allExpenses.forEach((exp) => {
+        if (exp.amount >= 0) return;
         const day = exp.date.split("T")[0];
         const amount = convertCurrency(
             Math.abs(exp.amount),
