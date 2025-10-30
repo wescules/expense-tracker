@@ -149,11 +149,13 @@ function updateTable() {
                 }
                 else{
                     let value = td.textContent.trim();
-                    const originalCurrency = value.charAt(1) === '$' ? 'usd' : value.charAt(1) === '¥' ? 'cny' : 'inr';
+                    const isExpense = value.startsWith('-') ? 1 : 0;
+                    const originalCurrency = value.charAt(isExpense) === '$' ? 'usd' : value.charAt(isExpense) === '¥' ? 'cny' : 'inr';
                     value = value.replace('$', '').replace("¥", '').replace("₹", '').replace(',', '');
 
                     const oldValue = parseFloat(value);
-                    td.textContent = '-' + formatCurrencyInTable(convertCurrency(Math.abs(oldValue), originalCurrency, event.target.value), event.target.value); 
+                    const addNegativeSign = isExpense ? '-' : ''
+                    td.textContent = addNegativeSign + formatCurrencyInTable(convertCurrency(Math.abs(oldValue), originalCurrency, event.target.value), event.target.value); 
                 }
             });
 
@@ -182,12 +184,13 @@ function calculateCategoryBreakdown(expenses) {
 function calculateIncome(expenses) {
     return expenses
         .filter(exp => exp.amount > 0)
-        .reduce((sum, exp) => sum + exp.amount, 0);
+        .reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
 }
 
 function calculateExpenses(expenses) {
     return expenses
-        .filter(exp => exp.amount < 0).reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
+        .filter(exp => exp.amount < 0)
+        .reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
 }
 
 function populateCategoryDropDown(categories) {

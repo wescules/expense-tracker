@@ -136,7 +136,7 @@ function createTable(expenses) {
                                     ${escapeHTML(expense.category)}
                                 </div>
                                 </td>
-                                <td class="amount" style="color: #e74c3c;text-align: center;white-space: nowrap; width: 25%;">
+                                <td class="amount" style="color: ${expense.amount > 0 ? '#2EAB7D' : '#e74c3c'};text-align: center;white-space: nowrap; width: 25%;">
                                 ${formatCurrencyInTable(expense.amount, expense.currency)}
                                 </td>
                             </tr>

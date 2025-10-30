@@ -153,7 +153,7 @@ async function getAll(localStorageName, collectionName, lastSyncKey) {
         collection(db, collectionName),
         localStorageName === 'allTransactions' ? 
         where("date", ">", lastSyncDate.toISOString()) :
-        or(where("date", ">", lastSyncDate.toISOString()), where("updatedAt", ">", lastSyncDate.toISOString()))
+        where("updatedAt", ">", lastSyncDate.toISOString())
     );
 
     const snap = await getDocs(q);
