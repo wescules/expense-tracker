@@ -1,23 +1,17 @@
 const colorPalette = [
-    '#FF6B6B', // soft red
-    '#4ECDC4', // teal
-    '#8338EC', // purple
-    '#3A86FF', // royal blue
-    '#96CEB4', // mint green
-    '#FFBE0B', // yellow-orange
-    '#FF006E', // hot pink
-    '#FB5607', // orange
-    '#38B000', // green
-    '#9B5DE5', // violet
-    '#F15BB5', // pink
-    '#FF9F1C', // bright orange
-    '#2EC4B6', // turquoise
-    '#E71D36', // strong red
-    '#011627', // navy
-    '#FF595E', // coral
-    '#6A4C93', // deep purple
-    '#1982C4', // medium blue
-    '#8AC926'  // lime green
+  '#FF0000', // red
+  '#00FF00', // bright green
+  '#0000FF', // blue
+  '#FFFF00', // yellow
+  '#FF00FF', // magenta
+  '#00FFFF', // cyan
+  '#8B00FF', // violet
+  '#FF9F1C', // bright orange
+  '#FF1493', // deep pink
+  '#1E90FF', // dodger blue
+  '#FFD700', // gold
+  '#A52A2A', // brown
+  '#808080'  // gray
 ];
 const currencyBehaviors = {
     "usd": { symbol: "$", useComma: false, useDecimals: true },
@@ -50,12 +44,6 @@ const currencyBehaviors = {
     // "vnd": { symbol: "₫", useComma: true, useDecimals: false },
     // "myr": { symbol: "RM", useComma: false, useDecimals: true },
 };
-
-// let currentCurrency = 'usd';
-// let startDate = 1;
-// let currentDate = new Date();
-// let allExpenses = [];
-// let allTags = new Set();
 
 // Hardcoded conversion rates (relative to USD as base)
 const rates = {
