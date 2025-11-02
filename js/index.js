@@ -476,6 +476,7 @@ async function refreshDashboard() {
         } else if (document.getElementById('settingsNav').checked) {
             switchToSettings()
         }
+        showMessage('refreshDashboard', 'Dashboard updated successfully!', true);
     } catch (error) {
         console.error('Failed to initialize dashboard:', error);
     }
