@@ -447,6 +447,41 @@ async function updateExpenseForm(event) {
     }
 }
 
+async function refreshDashboard() {
+    document.getElementById("pie").classList.add("active")
+    document.getElementById("bar").classList.remove("active")
+    document.getElementById("calendar").classList.remove("active")
+    
+    try {
+        const tableContainer = document.getElementById('tableHistoryContainer');
+
+        const [expenses, transactions, categories] = await Promise.all([getAllExpenses(), getAllTransactions(), getAllCategories()]);
+        if (!expenses) throw new Error('Failed to fetch expenses');
+        allExpenses = Array.isArray(expenses) ? expenses : [];
+        allTransactions = Array.isArray(transactions) ? transactions : [];
+        categories_settings = categories.categories
+
+        const uniqueCategories = [...new Set(allExpenses.map(exp => exp.category))];
+        populateCategoryDropDown(categories);
+        assignCategoryColors(uniqueCategories);
+        updateMonthDisplay();
+        updateChartAndLegend();
+        updateTable();
+        tableContainer.innerHTML = createTransactionTable(allTransactions)
+        await Promise.all([renderCategories(categories.categories), populateCurrencySelect()]);
+        if (document.getElementById('dashboardNav').checked) {
+            switchToDashboard()
+        } else if (document.getElementById('historyNav').checked) {
+            switchToTransactions()
+        } else if (document.getElementById('settingsNav').checked) {
+            switchToSettings()
+        }
+    } catch (error) {
+        console.error('Failed to initialize dashboard:', error);
+    }
+}
+
+
 async function initialize() {
     document.getElementById("pie").classList.add("active")
     document.getElementById("bar").classList.remove("active")

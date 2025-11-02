@@ -194,6 +194,52 @@ async function getAllExpensesAndTransactions() {
   }
 }
 
+async function getAllExpenses() {
+  try {
+    const querySnapshot = await getDocs(collection(db, EXPENSES_COLLECTION));
+    
+    let expenseList = [];
+    querySnapshot.forEach((doc) => {
+      const expense = doc.data();
+      expenseList.push({ id: doc.id, ...expense });
+    });
+    if (expenseList.length > 0){
+        localStorage.setItem('allExpenses', JSON.stringify(expenseList));
+    }
+    return expenseList;
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+    const cachedExpenses = localStorage.getItem('allExpenses')
+    if(cachedExpenses){
+        return JSON.parse(cachedExpenses)
+    }
+  }
+  return []; // Return an empty array in case of error
+}
+
+async function getAllTransactions() {
+  try {
+    const querySnapshot = await getDocs(collection(db, TRANSACTION_COLLECTION));
+    
+    let transactionList = [];
+    querySnapshot.forEach((doc) => {
+      const transaction = doc.data();
+      transactionList.push({ id: doc.id, ...transaction });
+    });
+    if (transactionList.length > 0){
+        localStorage.setItem('transactions', JSON.stringify(transactionList));
+    }
+    return transactionList;
+  } catch (error) {
+    console.error("Error getting documents: ", error);
+    const cachedTransactions = localStorage.getItem('transactions')
+    if(cachedTransactions){
+        return JSON.parse(cachedTransactions)
+    }
+  }
+  return [];
+}
+
 function getLocaleDate(date=new Date()) {
     const chinaTimeOffset = date.getTime() + 8 * 60 * 60 * 1000; // China time
     // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
@@ -288,3 +334,5 @@ window.updateCategories = updateCategories;
 window.updateUserConfig = updateUserConfig;
 window.getAllExpensesAndTransactions = getAllExpensesAndTransactions;
 window.getLocaleDate = getLocaleDate;
+window.getAllExpenses = getAllExpenses;
+window.getAllTransactions = getAllTransactions;
