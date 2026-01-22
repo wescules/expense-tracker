@@ -201,7 +201,11 @@ async function getAllExpenses() {
     let expenseList = [];
     querySnapshot.forEach((doc) => {
       const expense = doc.data();
-      expenseList.push({ id: doc.id, ...expense });
+        if (expense.deleted === true) {
+            console.log("Skipping deleted expense:", expense.name);
+            return;
+        }
+        expenseList.push({ id: doc.id, ...expense });
     });
     if (expenseList.length > 0){
         localStorage.setItem('allExpenses', JSON.stringify(expenseList));
