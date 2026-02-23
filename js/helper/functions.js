@@ -38,7 +38,7 @@ const currencyBehaviors = {
     // "hkd": { symbol: "HK$", useComma: false, useDecimals: true },
     // "bdt": { symbol: "৳", useComma: false, useDecimals: true },
     // "sgd": { symbol: "S$", useComma: false, useDecimals: true },
-    // "thb": { symbol: "฿", useComma: false, useDecimals: true },
+    "thb": { symbol: "฿", useComma: false, useDecimals: true },
     // "try": { symbol: "₺", useComma: true, useDecimals: true },
     // "mxn": { symbol: "Mex$", useComma: false, useDecimals: true },
     // "php": { symbol: "₱", useComma: false, useDecimals: true },
@@ -56,7 +56,8 @@ const currencyBehaviors = {
 const rates = {
   'usd': 1,
   'cny': 7.12,   // 1 USD = 7.12 CNY
-  'inr': 88.77   // 1 USD = 88.77 INR
+  'inr': 88.77,   // 1 USD = 88.77 INR
+  'thb': 31 ,   
 };
 
 function convertCurrency(amount, from, to) {

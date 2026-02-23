@@ -150,8 +150,8 @@ function updateTable() {
                 else{
                     let value = td.textContent.trim();
                     const isExpense = value.startsWith('-') ? 1 : 0;
-                    const originalCurrency = value.charAt(isExpense) === '$' ? 'usd' : value.charAt(isExpense) === '¥' ? 'cny' : 'inr';
-                    value = value.replace('$', '').replace("¥", '').replace("₹", '').replace(',', '');
+                    const originalCurrency = value.charAt(isExpense) === '$' ? 'usd' : value.charAt(isExpense) === '¥' ? 'cny' : value.charAt(isExpense) === '₹' ? 'inr' : 'thb';
+                    value = value.replace('$', '').replace("¥", '').replace("₹", '').replace(',', '').replace('฿', '');
 
                     const oldValue = parseFloat(value);
                     const addNegativeSign = isExpense ? '-' : ''

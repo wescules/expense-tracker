@@ -108,6 +108,7 @@ function createTable(expenses) {
                             <option value="usd">$ USD</option>
                             <option value="cny">¥ CNY</option>
                             <option value="inr">₹ INR</option>
+                            <option value="thb">฿ THB</option>
                         </select>` : ''}
                     </div>
                     </td>`;
