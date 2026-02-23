@@ -55,9 +55,9 @@ const currencyBehaviors = {
 // Hardcoded conversion rates (relative to USD as base)
 const rates = {
   'usd': 1,
-  'cny': 7.12,   // 1 USD = 7.12 CNY
-  'inr': 88.77,   // 1 USD = 88.77 INR
-  'thb': 31 ,   
+  'cny': 6.90,   // 1 USD = 7.12 CNY
+  'inr': 90.66,   // 1 USD = 88.77 INR
+  'thb': 31 ,
 };
 
 function convertCurrency(amount, from, to) {
