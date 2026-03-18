@@ -582,6 +582,74 @@ header {
     background-color: rgba(52, 211, 153, 0.1);
 }
 
+.date-range-buttons {
+    flex-direction:row;
+}
+
+.date-range-inputs {
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.date-input {
+    width: 100%;
+    max-width: 200px;
+}
+
+.date-separator {
+    display: none;
+}
+
+/* Date Range Picker Styles */
+.date-range-picker {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.date-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.date-input {
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.date-input:disabled {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.date-separator {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.date-range-active .current-month {
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.date-range-active .current-month:hover {
+    text-decoration: underline;
+}
+
 .cashflow-item.expenses {
     background-color: rgba(239, 68, 68, 0.1);
 }

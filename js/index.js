@@ -11,6 +11,8 @@ let categoryColors = {};
 let categoryData = [];
 let categories_settings = [];
 let convertTableCurrency = 'none';
+let dateRangeActive = false;
+let customDateRange = { start: null, end: null };
 
 function switchToTransactions() {
     const tableHistoryContainer = document.getElementById('tableHistoryContainer')
@@ -128,8 +130,12 @@ function loadExpenseIntoModal(id, name, category, amount, date, currency) {
 function updateTable() {
     document.querySelector('.month-navigation').style.display = 'flex';
 
-    expensesForTable = getMonthExpenses(allExpenses);
-    
+    if (dateRangeActive && customDateRange.start && customDateRange.end) {
+        expensesForTable = getCustomDateRangeExpenses(allExpenses, customDateRange.start, customDateRange.end);
+    } else {
+        expensesForTable = getMonthExpenses(allExpenses);
+    }
+
     const tableContainer = document.getElementById('tableContainer');
     tableContainer.innerHTML = createTable(expensesForTable);
 
@@ -230,6 +236,9 @@ function getDaysInMonth(year, month) {
 }
 
 document.getElementById('prevMonth').addEventListener('click', () => {
+    if (dateRangeActive) {
+        document.getElementById('clearDateRange').click();
+    }
     currentDate.setMonth(currentDate.getMonth() - 1);
     updateMonthDisplay();
     updateTable();
@@ -237,6 +246,9 @@ document.getElementById('prevMonth').addEventListener('click', () => {
 });
 
 document.getElementById('nextMonth').addEventListener('click', () => {
+    if (dateRangeActive) {
+        document.getElementById('clearDateRange').click();
+    }
     currentDate.setMonth(currentDate.getMonth() + 1);
     updateMonthDisplay();
     updateTable();
@@ -284,6 +296,56 @@ document.getElementById('updateBtn').addEventListener('click', async (e) => {
         await updateExpenseForm(e);
     }
 });
+
+// Date Range Picker functionality
+document.getElementById('currentMonth').addEventListener('click', () => {
+    const picker = document.getElementById('dateRangePicker');
+    if (picker.style.display === 'none' || picker.style.display === '') {
+        picker.style.display = 'flex';
+        // Set dates: if date range is active, use current range; otherwise use current month
+        if (dateRangeActive && customDateRange.start && customDateRange.end) {
+            document.getElementById('startDatePicker').value = customDateRange.start;
+            document.getElementById('endDatePicker').value = customDateRange.end;
+        } else {
+            const { start, end } = getMonthBounds(currentDate);
+            document.getElementById('startDatePicker').value = formatDateForInput(start);
+            document.getElementById('endDatePicker').value = formatDateForInput(end);
+        }
+    } else {
+        picker.style.display = 'none';
+    }
+});
+
+document.getElementById('applyDateRange').addEventListener('click', () => {
+    const startDate = document.getElementById('startDatePicker').value;
+    const endDate = document.getElementById('endDatePicker').value;
+    
+    if (startDate && endDate) {
+        dateRangeActive = true;
+        customDateRange = { start: startDate, end: endDate };
+        document.getElementById('currentMonth').classList.add('date-range-active');
+        document.getElementById('currentMonth').textContent = `${formatDateShort(startDate)} - ${formatDateShort(endDate)}`;
+        document.getElementById('dateRangePicker').style.display = 'none';
+        initialize(); // Fetch new data with date range
+    }
+});
+
+document.getElementById('clearDateRange').addEventListener('click', () => {
+    dateRangeActive = false;
+    customDateRange = { start: null, end: null };
+    document.getElementById('currentMonth').classList.remove('date-range-active');
+    document.getElementById('dateRangePicker').style.display = 'none';
+    document.getElementById('prevMonth').style.display = 'inline-flex';
+    document.getElementById('nextMonth').style.display = 'inline-flex';
+    updateMonthDisplay();
+    initialize(); // Fetch new data for current month
+});
+
+function formatDateShort(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 let expenseToDelete = null;
 

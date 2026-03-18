@@ -143,7 +143,9 @@ function formatDateFromUTC(utcDateString) {
 
 function updateMonthDisplay() {
     const currentMonthEl = document.getElementById('currentMonth');
-    if (currentMonthEl) {
+    if (dateRangeActive && customDateRange.start && customDateRange.end) {
+        currentMonthEl.textContent = `${formatDateShort(customDateRange.start)} - ${formatDateShort(customDateRange.end)}`;
+    } else if (currentMonthEl) {
         currentMonthEl.textContent = formatMonth(currentDate);
     }
 }
@@ -180,6 +182,27 @@ function getMonthBounds(date) {
         const endLocal = new Date(nextYear, nextMonth, nextMonthStartDate - 1, 23, 59, 59, 999);
         return { start: new Date(startLocal.toISOString()), end: new Date(endLocal.toISOString()) };
     }
+}
+
+function getCustomDateRangeExpenses(expenses, startDate, endDate) {
+    // Parse dates as local time to match user's timezone
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+    
+    const start = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+    const end = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+    
+    return expenses.filter(exp => {
+        const expDate = new Date(exp.date);
+        return expDate >= start && expDate <= end;
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function getMonthExpenses(expenses) {

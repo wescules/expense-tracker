@@ -115,7 +115,11 @@ function createCalendarView() {
 }
 
 function updateChartAndLegend() {
-    const monthExpenses = getMonthExpenses(allExpenses);
+    if (dateRangeActive && customDateRange.start && customDateRange.end) {
+        monthExpenses = getCustomDateRangeExpenses(allExpenses, customDateRange.start, customDateRange.end);
+    } else {
+        monthExpenses = getMonthExpenses(allExpenses);
+    }
     const chartBox = document.querySelector('.chart-box');
     const legendBox = document.getElementById('customLegend');
     const cashflowSection = document.getElementById('cashflow-section');
@@ -282,7 +286,11 @@ function drawExpenseChart() {
 function updateLegend() {
     const legendContainer = document.getElementById('customLegend');
     legendContainer.innerHTML = '';
-    const monthExpenses = getMonthExpenses(allExpenses);
+    if (dateRangeActive && customDateRange.start && customDateRange.end) {
+        monthExpenses = getCustomDateRangeExpenses(allExpenses, customDateRange.start, customDateRange.end);
+    } else {
+        monthExpenses = getMonthExpenses(allExpenses);
+    }
     const currentMonthCategories = [...new Set(monthExpenses
         .filter(exp => exp.amount < 0).map(exp => exp.category))];
     const categoryMap = new Map(categoryData.map(cat => [cat.category, cat]));

@@ -205,6 +205,13 @@
     --fa: "\f060"
 }
 
+.fa-magnifying-glass {
+    --fa: "\f002"
+}
+.fa-x {
+    --fa: "\58"
+}
+
 .fa-arrow-right {
     --fa: "\f061"
 }
