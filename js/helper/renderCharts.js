@@ -334,21 +334,13 @@ function updateLegend() {
     const totalsHtml = `
                 <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Total <lmao style="font-size: x-small">(${currentCashToggleStateIndex === 0 ?activeTotalExpensesCount : filteredTotalExpensesCount} expenses)</lmao></span>
+                        <span class='nav-button' onclick="toggleCashCategory()">${cashToggleStates[currentCashToggleStateIndex]}
+                            <lmao style="font-size: x-small">(${currentCashToggleStateIndex === 0 ? activeTotalExpensesCount : filteredTotalExpensesCount} expenses)</lmao>
+                        </span>
                         <span class="amount">
-                            ${formatCurrency(activeTotalExpenses)}
+                            ${currentCashToggleStateIndex === 0 ? formatCurrency(activeTotalExpenses) : formatCurrency(cashToggleAmount)}
                         </span>
                     </div>
                 </div>`;
-    
-    let cashItem = document.createElement('div');
-    cashItem.onclick = () => toggleCashCategory();
-    cashItem.innerHTML = `
-            <div class="legend-text">
-                <button class="nav-button">${cashToggleStates[currentCashToggleStateIndex]}</button>
-                <span class="amount">${currentCashToggleStateIndex === 0 ? formatCurrency(activeTotalExpenses) : formatCurrency(cashToggleAmount)}</span>
-            </div>`;
-    legendContainer.appendChild(cashItem);
-
     legendContainer.insertAdjacentHTML('beforeend', totalsHtml);
 }

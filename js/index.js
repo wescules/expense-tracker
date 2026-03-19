@@ -14,7 +14,7 @@ let convertTableCurrency = 'none';
 let dateRangeActive = false;
 let customDateRange = { start: null, end: null };
 
-const cashToggleStates = ['Cash + Online', 'Cash Only', 'Online Only'];
+const cashToggleStates = ['Total', 'Cash only', 'Online only'];
 let currentCashToggleStateIndex = 0;
 let cashToggleAmount = 0;
 let filteredTotalExpensesCount = 0;
