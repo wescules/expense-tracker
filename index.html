@@ -24,6 +24,18 @@
             }
         })();
     </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                const reg = await navigator.serviceWorker.register('/sw.js');
+                console.log('SW registered:', reg);
+                } catch (err) {
+                console.error('SW failed:', err);
+                }
+            });
+        }
+    </script>
     <title>ExpenseOwl Dashboard</title>
     <script src="js/externalLibraries/chart.min.js"></script>
     <script src="js/externalLibraries/d3.v7.min.js" defer></script>
