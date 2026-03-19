@@ -208,6 +208,11 @@
 .fa-magnifying-glass {
     --fa: "\f002"
 }
+
+.fa-dollar-sign {
+    --fa: "\f155"
+}
+
 .fa-x {
     --fa: "\58"
 }

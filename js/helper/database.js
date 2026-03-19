@@ -310,6 +310,27 @@ async function updateExpense(documentId, updatedFields) {
     }
 }
 
+// Function to toggle cash expense (cash vs non-cash)
+async function toggleCashExpense(documentId) {
+    const expenseRef = doc(db, EXPENSES_COLLECTION, documentId);
+    let expenseDoc = await getDoc(expenseRef);
+    let isCash = false;
+    try {
+        expenseDoc = expenseDoc.data();
+        if(!expenseDoc.cash || expenseDoc.cash === undefined || expenseDoc.cash === null || expenseDoc.cash === false){
+            isCash = true
+        }else{
+            isCash = false
+        }
+        
+        await updateDoc(expenseRef, {cash: isCash})
+        console.log("Document successfully updated!");
+        return isCash;
+    } catch (error) {
+        console.error("Error updating document: ", error);
+    }
+}
+
 // Function to delete an expense
 async function deleteExpense(documentId) {
     const localDate = getLocaleDate();
@@ -340,3 +361,4 @@ window.getAllExpensesAndTransactions = getAllExpensesAndTransactions;
 window.getLocaleDate = getLocaleDate;
 window.getAllExpenses = getAllExpenses;
 window.getAllTransactions = getAllTransactions;
+window.toggleCashExpense = toggleCashExpense;

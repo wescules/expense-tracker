@@ -387,7 +387,7 @@ header {
     color: var(--text-secondary);
 }
 
-.delete-button, .edit-button {
+.delete-button, .edit-button, .edit-cash-button {
     background: none;
     border: none;
     color: var(--text-secondary);
@@ -397,7 +397,7 @@ header {
     transition: all 0.2s;
 }
 
-.delete-button, .edit-button {
+.delete-button, .edit-button, .edit-cash-button {
     border-radius: 9999px;
     padding: 6px 10px;
 }
@@ -411,6 +411,12 @@ header {
     background-color: rgba(105, 175, 222, 0.1);
     color: var(--accent);
 }
+
+.edit-cash-button:hover {
+    background-color: rgba(105, 175, 222, 0.1);
+    color: green;
+}
+
 .chart-icons {
     display: flex;
     gap: 13px;

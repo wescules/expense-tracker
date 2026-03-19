@@ -14,6 +14,11 @@ let convertTableCurrency = 'none';
 let dateRangeActive = false;
 let customDateRange = { start: null, end: null };
 
+const cashToggleStates = ['Cash + Online', 'Cash Only', 'Online Only'];
+let currentCashToggleStateIndex = 0;
+let cashToggleAmount = 0;
+let filteredTotalExpensesCount = 0;
+
 function switchToTransactions() {
     const tableHistoryContainer = document.getElementById('tableHistoryContainer')
     tableHistoryContainer.style.display = 'flex';
@@ -88,14 +93,48 @@ function isEnabledCategory(category) {
     return disabledCategories.size !== 0 ? disabledCategories.has(category) : !disabledCategories.has(category)
 }
 
+function updateCashToggleAmount() {
+     if (currentCashToggleStateIndex === 0) { // Show both cash and online
+        cashToggleAmount = monthExpenses
+        .filter(exp => exp.amount < 0 && isEnabledCategory(exp.category))
+        .reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
+        filteredTotalExpensesCount = monthExpenses.filter(exp => exp.amount < 0 && isEnabledCategory(exp.category)).length;
+    }else if (currentCashToggleStateIndex === 1) { // Show cash only
+        cashToggleAmount = monthExpenses
+        .filter(exp => exp.amount < 0 && exp.cash === true && isEnabledCategory(exp.category))
+        .reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
+        filteredTotalExpensesCount = monthExpenses.filter(exp => exp.amount < 0 && exp.cash === true && isEnabledCategory(exp.category)).length;
+    } else {    // Show online only
+        cashToggleAmount = monthExpenses
+        .filter(exp => exp.amount < 0 && (exp.cash === false || exp.cash === undefined) && isEnabledCategory(exp.category))
+        .reduce((sum, exp) => sum + convertCurrency(Math.abs(exp.amount), exp.currency, currentCurrency), 0);
+        filteredTotalExpensesCount = monthExpenses.filter(exp => exp.amount < 0 && (exp.cash === false || exp.cash === undefined) && isEnabledCategory(exp.category)).length;
+    }
+}
+
+function toggleCashCategory() {
+    currentCashToggleStateIndex = (currentCashToggleStateIndex + 1) % cashToggleStates.length;
+    updateCashToggleAmount();
+    updateLegend();
+    updateTable();
+}
+
 function toggleCategory(category) {
     if (disabledCategories.has(category)) {
         disabledCategories.delete(category);
     } else {
         disabledCategories.add(category);
     }
+
+    updateCashToggleAmount();
     updateLegend();
     updateTable();
+}
+
+async function handleCashToggleClick(event, expenseId) {
+    event.preventDefault();
+    let isCash = await toggleCashExpense(expenseId);
+    document.getElementById(`category-${expenseId}`).innerHTML = `${document.getElementById(`category-${expenseId}`).textContent.replace('💵', '')} ${isCash ? '💵' : ''}`;
 }
 
 function editExpenseById(event, expenseId) {

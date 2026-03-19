@@ -76,6 +76,13 @@ function createTable(expenses) {
     if (disabledCategories.size !== 0){
         expenses = expenses.filter(expense => disabledCategories.has(expense.category))
     }
+
+    if (currentCashToggleStateIndex === 1) { // Show cash only
+        expenses = expenses.filter(exp => exp.amount < 0 && exp.cash === true)
+    } else if (currentCashToggleStateIndex === 2) {    // Show online only
+        expenses = expenses.filter(exp => exp.amount < 0 && (exp.cash === false || exp.cash === undefined))
+    }
+
     const aggregated = expenses.reduce((acc, expense) => {
         const date = new Date(expense.date).toISOString().split('T')[0]; // "YYYY-MM-DD"
         if (!acc[date]) acc[date] = [];
@@ -131,10 +138,10 @@ function createTable(expenses) {
                                 </td>
                                 <td style="width: 65%; padding-left: 15px">
                                 <div>${escapeHTML(expense.name)}</div>
-                                <div style="color: ${
+                                <div id="category-${expense.id}" style="color: ${
                                     categoryColors[expense.category]
                                 };">
-                                    ${escapeHTML(expense.category)}
+                                    ${escapeHTML(expense.category)} ${expense.cash ? `💵` : ''}
                                 </div>
                                 </td>
                                 <td class="amount" style="color: ${expense.amount > 0 ? '#2EAB7D' : '#e74c3c'};text-align: center;white-space: nowrap; width: 25%;">
@@ -146,6 +153,11 @@ function createTable(expenses) {
 
                         <!-- Hidden buttons revealed on swipe -->
                         <div class="row-actions">
+                        <button class="edit-cash-button" style='${expense.cash === true ? "color: green;" : ""}' onclick="handleCashToggleClick(event, '${
+                                expense.id
+                            }')">
+                                <i class="fa-solid fa-dollar-sign"></i>
+                            </button>
                             <button class="edit-button" onclick="editExpenseById(event, '${
                                 expense.id
                             }')">
