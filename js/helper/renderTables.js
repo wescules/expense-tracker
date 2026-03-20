@@ -186,6 +186,12 @@ function createTable(expenses) {
     `;
 }
 
+function getLocaleDate(date=new Date()) {
+    const chinaTimeOffset = date.getTime() + 8 * 60 * 60 * 1000; // China time
+    // const indiaTimeOffset = new Date().getTime()+ 5 * 60 + 30 * 60 * 1000; // India time
+    return new Date(chinaTimeOffset).toISOString().split('T')[0];
+}
+
 function createTransactionTable() {
     if (!allTransactions || allTransactions.length === 0) {
         return `<div class="no-data">No transactions found</div>`;
