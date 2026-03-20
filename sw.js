@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v3';
+const CACHE_NAME = 'v4-latest';
 const ASSETS = [
   '/expense-tracker/',
   '/expense-tracker/index.html',
@@ -31,6 +31,7 @@ const ASSETS = [
 
 // Install → cache critical assets
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // critical for iOS
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
@@ -39,12 +40,19 @@ self.addEventListener('install', (event) => {
 // Activate → clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
+    caches.keys().then((keys) =>
       Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log('Deleting old cache:', key);
+            return caches.delete(key);
+          }
+        })
       )
     )
   );
+
+  self.clients.claim(); // take control immediately
 });
 
 // Fetch → serve from cache first
