@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v1';
+const CACHE_NAME = 'v2';
 const ASSETS = [
   '/expense-tracker/',
   '/expense-tracker/index.html',
@@ -7,6 +7,8 @@ const ASSETS = [
   '/expense-tracker/js/helper/database.js',
   '/expense-tracker/js/helper/renderCharts.js',
   '/expense-tracker/js/helper/renderTables.js',
+  '/expense-tracker/js/helper/categoryPicker.js',
+  '/expense-tracker/js/helper/settings.js',
   '/expense-tracker/js/externalLibraries/cal-heatmap.min.js',
   '/expense-tracker/js/externalLibraries/chart.min.js',
   '/expense-tracker/js/externalLibraries/chartjs-adapter-luxon.js',
@@ -21,6 +23,10 @@ const ASSETS = [
   '/expense-tracker/pwa/icon-512.png',
   '/expense-tracker/assets/wes.webp',
   '/expense-tracker/assets/abbie.webp',
+  '/expense-tracker/webfonts/fa-brands-400.woff2',
+  '/expense-tracker/webfonts/fa-regular-400.woff2',
+  '/expense-tracker/webfonts/fa-solid-900.woff2',
+  '/expense-tracker/webfonts/fa-v4compatibility.woff2',
 ];
 
 // Install → cache critical assets
