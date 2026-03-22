@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v6-firebase-cache-optimization';
+const CACHE_NAME = 'v7-firebase-cache';
 // Order matters here - critical assets first, then non-critical ones. 
 // Found out the hard way that if the JS files are cached before the HTML/CSS, the app can break on first load since it tries to fetch uncached HTML/CSS.
 const ASSETS = [
@@ -77,11 +77,19 @@ self.addEventListener('fetch', (event) => {
       })
     );
   }
+  else if (event.request.url.includes('firestore.googleapis.com/google.firestore')) {
+    return; // don't intercept
+  }
   else {
+    try {
       event.respondWith(
         caches.match(event.request).then(cached => {
           return cached || fetch(event.request);
         })
       );
+    } catch (error) {
+      console.error("Error during fetch:", error);
+      return;
+    }
   }
 });
